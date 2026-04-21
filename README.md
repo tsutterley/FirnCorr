@@ -9,14 +9,14 @@ Python-based tools for correcting data for surface mass balance and firn process
     <td><b>Tests:</b></td>
     <td>
         <a href="https://firncorr.readthedocs.io/en/latest/?badge=latest" alt="Documentation Status"><img src="https://readthedocs.org/projects/firncorr/badge/?version=latest"></a>
-        <a href="https://github.com/FirnCorr/FirnCorr/actions/workflows/python-request.yml" alt="Build"><img src="https://github.com/FirnCorr/FirnCorr/actions/workflows/python-request.yml/badge.svg"></a>
-        <a href="https://github.com/FirnCorr/FirnCorr/actions/workflows/ruff-format.yml" alt="Ruff"><img src="https://github.com/FirnCorr/FirnCorr/actions/workflows/ruff-format.yml/badge.svg"></a>
+        <a href="https://github.com/tsutterley/FirnCorr/actions/workflows/python-request.yml" alt="Build"><img src="https://github.com/tsutterley/FirnCorr/actions/workflows/python-request.yml/badge.svg"></a>
+        <a href="https://github.com/tsutterley/FirnCorr/actions/workflows/ruff-format.yml" alt="Ruff"><img src="https://github.com/tsutterley/FirnCorr/actions/workflows/ruff-format.yml/badge.svg"></a>
     </td>
   </tr>
   <tr>
     <td><b>License:</b></td>
     <td>
-        <a href="https://github.com/FirnCorr/FirnCorr/blob/main/LICENSE" alt="License"><img src="https://img.shields.io/github/license/FirnCorr/FirnCorr"></a>
+        <a href="https://github.com/tsutterley/FirnCorr/blob/main/LICENSE" alt="License"><img src="https://img.shields.io/github/license/tsutterley/FirnCorr"></a>
     </td>
   </tr>
 </table>
@@ -28,7 +28,7 @@ For more information: see the documentation at [firncorr.readthedocs.io](https:/
 Development version from GitHub:
 
 ```bash
-python3 -m pip install git+https://github.com/FirnCorr/FirnCorr.git
+python3 -m pip install git+https://github.com/tsutterley/FirnCorr.git
 ```
 
 ### Running with Pixi
@@ -39,7 +39,7 @@ Alternatively, you can use [Pixi](https://pixi.sh/) for a streamlined workspace 
 2. Clone the project repository:
 
 ```bash
-git clone https://github.com/FirnCorr/FirnCorr.git
+git clone https://github.com/tsutterley/FirnCorr.git
 ```
 
 3. Move into the `FirnCorr` directory
@@ -99,7 +99,7 @@ The software is provided here for your convenience but *with no guarantees whats
 ## Contributing
 
 This project contains work and contributions from the [scientific community](./CONTRIBUTORS.md).
-If you would like to contribute to the project, please have a look at the [contribution guidelines](./doc/source/getting_started/Contributing.rst), [open issues](https://github.com/FirnCorr/FirnCorr/issues) and [discussions board](https://github.com/FirnCorr/FirnCorr/discussions).
+If you would like to contribute to the project, please have a look at the [contribution guidelines](./doc/source/getting_started/Contributing.rst), [open issues](https://github.com/tsutterley/FirnCorr/issues) and [discussions board](https://github.com/tsutterley/FirnCorr/discussions).
 
 ## License
 
