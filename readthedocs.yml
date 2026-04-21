@@ -1,0 +1,27 @@
+# readthedocs.yml
+# Read the Docs configuration file
+# See https://docs.readthedocs.io/en/stable/config-file/v2.html for details
+
+# Required
+version: 2
+
+# Configuration for the documentation build process
+build:
+  os: "ubuntu-lts-latest"
+  tools:
+    python: "3.13"
+  jobs:
+    create_environment:
+        - asdf plugin add pixi
+        - asdf install pixi latest
+        - asdf global pixi latest
+    install:
+        - pixi install -e doc
+    build:
+        html:
+          - pixi run -e dev sphinx-build -T -b html doc/source $READTHEDOCS_OUTPUT/html
+
+# Build documentation with Sphinx
+sphinx:
+  builder: html
+  configuration: doc/source/conf.py

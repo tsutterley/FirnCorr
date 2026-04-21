@@ -1,0 +1,53 @@
+# This workflow will install Python dependencies and update database from the provider files
+
+name: Update Provider Database
+
+on:
+  pull_request:
+    paths:
+      - FirnCorr/**
+      - providers/**
+      - .github/workflows/update-provider-database.yml
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  build:
+
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-slim
+    steps:
+    - uses: actions/checkout@v6
+    - name: Set up pixi environment
+      uses: prefix-dev/setup-pixi@v0.9.4
+    - name: Lint with flake8
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        pixi run lint
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        pixi run lint "--exit-zero --max-complexity=10 --max-line-length=127"
+    - name: Merge Providers
+      run: |
+        # install the package in editable mode
+        pip install --no-deps --editable .
+        pixi run python providers/_providers_to_database.py --pretty -vv
+    - name: Check for changes
+      id: changes
+      run: |
+        if [ -n "$(git status --porcelain)" ] ; then
+            echo "detected=true" >> $GITHUB_OUTPUT;
+            echo "::debug::Changes detected";
+        else
+            echo "detected=false" >> $GITHUB_OUTPUT;
+            echo "::debug::No changes detected";
+        fi
+    - name: Checkout PR and Push Changes
+      if: steps.changes.outputs.detected == 'true'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        gh pr checkout ${{ github.event.pull_request.number }}
+        git add -A
+        git config user.name ${{ github.actor }}
+        git config user.email ${{ github.actor }}@users.noreply.github.com
+        git commit -m "Update provider database"
+        git push

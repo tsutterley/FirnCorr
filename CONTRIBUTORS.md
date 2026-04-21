@@ -1,0 +1,8 @@
+- [Patrick Alexander (LDEO Columbia University)](https://www.earth.columbia.edu/users/profile/patrick-m-alexander)
+- [Brooke Medley (NASA Goddard Space Flight Center)](https://science.gsfc.nasa.gov/sed/bio/brooke.c.medley)
+- [David Porter (LDEO Columbia University)](https://www.earth.columbia.edu/users/profile/david-f-f-porter)
+- [Ben Smith (University of Washington)](http://psc.apl.uw.edu/people/investigators/ben-smith/)
+- [Matt Siegfried (Colorado School of Mines)](https://geophysics.mines.edu/project/siegfried-matthew/)
+- [Tyler Sutterley (University of Washington)](http://psc.apl.uw.edu/people/investigators/tyler-sutterley/)
+- [Marco Tedesco (LDEO Columbia University)](https://www.earth.columbia.edu/users/profile/marco-tedesco)
+- [Hannah Verboncoeur (Colorado School of Mines)](https://glaciology.mines.edu/people/)
