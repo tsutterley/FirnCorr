@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 """
-fetch_mar_ftp.py
+fetch_mar.py
 Written by Tyler Sutterley (04/2026)
 
-Syncs MAR regional climate outputs for a given ftp url
+Syncs MAR regional climate outputs for a given url
     ftp://ftp.climato.be/fettweis
+    http://ftp.climato.be/fettweis
 
 PROGRAM DEPENDENCIES:
     utilities.py: download and management utilities for syncing files
@@ -33,9 +34,9 @@ import FirnCorr.utilities
 _default_directory = FirnCorr.utilities.get_cache_path()
 
 
-# PURPOSE: sync local MAR files with ftp and handle error exceptions
-def fetch_mar_ftp(
-    parsed_ftp,
+# PURPOSE: sync local MAR files for a given URL
+def fetch_mar(
+    URL,
     directory: str | pathlib.Path | None = _default_directory,
     years: list[int] | None = None,
     timeout: int | None = None,
@@ -44,12 +45,12 @@ def fetch_mar_ftp(
     mode: int = 0o775,
 ):
     """
-    Syncs MAR regional climate outputs for a given ftp url
+    Syncs MAR regional climate outputs for a given url
 
     Parameters
     ----------
-    parsed_ftp: ParseResult
-        Parsed ftp url from :func:`FirnCorr.utilities.urlparse.urlparse`
+    URL: object
+        URL from :py:class:`FirnCorr.utilities.URL`
     directory: str or pathlib.Path
         Working data directory
     years: list, default None
@@ -71,16 +72,26 @@ def fetch_mar_ftp(
     directory = pathlib.Path(directory).expanduser().absolute()
     directory.mkdir(exist_ok=True, parents=True, mode=mode)
 
-    # list directories from ftp
+    # regular expression for finding years in file names
     R1 = r"\d+" if not years else r"|".join(map(str, years))
     # find files and reduce to years of interest if specified
-    remote_files, remote_times = FirnCorr.utilities.ftp_list(
-        [parsed_ftp.netloc, parsed_ftp.path],
-        timeout=timeout,
-        basename=True,
-        pattern=R1,
-        sort=True,
-    )
+    if URL.scheme.startswith("ftp"):
+        # find files on ftp server
+        remote_files, remote_times = FirnCorr.utilities.ftp_list(
+            [URL.netloc, URL.path],
+            timeout=timeout,
+            basename=True,
+            pattern=R1,
+            sort=True,
+        )
+    elif URL.scheme.startswith("http"):
+        # find files on http server
+        remote_files, remote_times = FirnCorr.utilities.mar_list(
+            URL.geturl(),
+            timeout=timeout,
+            pattern=R1,
+            sort=True,
+        )
 
     # sync each data file (in parallel if processes > 0)
     if processes > 0:
@@ -94,11 +105,11 @@ def fetch_mar_ftp(
         kwds = dict(timeout=timeout, clobber=clobber, mode=mode)
         # download remote MAR files to local directory
         for colname, collastmod in zip(remote_files, remote_times):
-            remote_path = [parsed_ftp.netloc, parsed_ftp.path, colname]
+            remote_path = URL.joinpath(colname)
             local_file = directory.joinpath(colname)
             out.append(
                 pool.apply_async(
-                    _multiprocess_download,
+                    _multiprocess,
                     args=(remote_path, collastmod, local_file),
                     kwds=kwds,
                 )
@@ -117,19 +128,19 @@ def fetch_mar_ftp(
         # sync each data file in series
         kwds = dict(timeout=timeout, clobber=clobber, mode=mode)
         for colname, collastmod in zip(remote_files, remote_times):
-            remote_path = [parsed_ftp.netloc, parsed_ftp.path, colname]
+            remote_path = URL.joinpath(colname)
             local_file = directory.joinpath(colname)
-            output = _ftp_download(remote_path, collastmod, local_file, **kwds)
+            output = _download(remote_path, collastmod, local_file, **kwds)
             logging.info(output) if output else None
 
 
 # PURPOSE: wrapper for running the sync program in multiprocessing mode
-def _multiprocess_download(*args, **kwds):
+def _multiprocess(*args, **kwds):
     """
     Wrapper for running the sync program in ``multiprocessing`` mode
     """
     try:
-        output = _ftp_download(*args, **kwds)
+        output = _download(*args, **kwds)
     except Exception as exc:
         # if there has been an error exception
         # print the type, value, and stack trace of the
@@ -142,19 +153,19 @@ def _multiprocess_download(*args, **kwds):
 
 # PURPOSE: pull file from a remote host checking if file exists locally
 # and if the remote file is newer than the local file
-def _ftp_download(
-    remote: list,
+def _download(
+    URL,
     mtime: int | float,
     local: str | pathlib.Path,
     **kwargs,
 ):
     """
-    Pull file from a ftp serve
+    Pull file from a remote host
 
     Parameters
     ----------
-    remote: list
-        Remote path components to file on ftp server
+    URL: object
+        URL from :py:class:`FirnCorr.utilities.URL`
     mtime: float
         Last modification time of the remote file in seconds since the epoch
     local: str or pathlib.Path
@@ -162,8 +173,6 @@ def _ftp_download(
     kwargs: dict
         Additional keyword arguments for syncing files
     """
-    # construct the full url to the remote file
-    url = posixpath.join(*remote)
     # check if local version of file exists
     if kwargs["clobber"]:
         why = " (overwrite)"
@@ -175,14 +184,22 @@ def _ftp_download(
         why = " (old)"
     # if file does not exist locally, is to be overwritten, or clobber is set
     # output string for printing files transferred
-    output = f"{url} -->\n\t{local}{why}\n"
+    output = f"{URL} -->\n\t{local}{why}\n"
     # copy remote file contents to local file
-    FirnCorr.utilities.from_ftp(
-        remote,
-        timeout=kwargs["timeout"],
-        local=local,
-        hash=FirnCorr.utilities.get_hash(local),
-    )
+    if URL.scheme.startswith("ftp"):
+        FirnCorr.utilities.from_ftp(
+            URL.parts,
+            timeout=kwargs["timeout"],
+            local=local,
+            hash=FirnCorr.utilities.get_hash(local),
+        )
+    elif URL.scheme.startswith("http"):
+        URL.get(
+            timeout=kwargs["timeout"],
+            local=local,
+            hash=FirnCorr.utilities.get_hash(local),
+        )
+
     # keep remote modification time of file and local access time
     os.utime(local, (local.stat().st_atime, mtime))
     local.chmod(mode=kwargs["mode"])
@@ -208,10 +225,10 @@ def _newer(t1: int, t2: int) -> bool:
 # PURPOSE: create arguments parser
 def arguments():
     parser = argparse.ArgumentParser(
-        description="""Syncs MAR regional climate outputs for a given ftp url
+        description="""Syncs MAR regional climate outputs
             """
     )
-    parser.add_argument("url", type=str, help="MAR ftp url")
+    parser.add_argument("url", type=str, help="MAR url")
     # working data directory
     parser.add_argument(
         "--directory",
@@ -267,12 +284,20 @@ def main():
     parser = arguments()
     args, _ = parser.parse_known_args()
 
+    # create and parse URL object
+    URL = FirnCorr.utilities.URL(args.url)
+    # parameters for connection check
+    if URL.scheme.startswith("ftp"):
+        check_connection = FirnCorr.utilities.check_ftp_connection
+        netloc = URL.netloc
+    elif URL.scheme.startswith("http"):
+        check_connection = FirnCorr.utilities.check_connection
+        netloc = URL.parents[-1].geturl()
     # check internet connection
-    if FirnCorr.utilities.check_ftp_connection("ftp.climato.be"):
-        # run program for parsed ftp
-        parsed_ftp = FirnCorr.utilities.urlparse.urlparse(args.url)
-        fetch_mar_ftp(
-            parsed_ftp,
+    if check_connection(netloc):
+        # run program for URL
+        fetch_mar(
+            URL,
             directory=args.directory,
             years=args.year,
             timeout=args.timeout,

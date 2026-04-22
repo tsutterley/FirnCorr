@@ -16,6 +16,7 @@ UPDATE HISTORY:
         added detection functions for checking if files are compressed
         allow additional keyword arguments to http functions
         added get_cache_path function for application cache directories
+        add MAR list function for parsing their http server directories
     Updated 09/2024: add wrapper to importlib for optional dependencies
     Updated 06/2022: add NASA Common Metadata Repository (CMR) queries
         added function to build GES DISC subsetting API requests
@@ -69,7 +70,6 @@ else:
     from urllib.parse import urlencode, quote_plus, urlparse
     from http.cookiejar import CookieJar
     import urllib.request as urllib2
-    import urllib.parse as urlparse
 
 
 class reify(object):
@@ -303,6 +303,10 @@ class URL:
         """Load ``JSON`` response from URL"""
         return from_json(self.urlname, headers=self._headers, *args, **kwargs)
 
+    def query(self, *args, **kwargs):
+        """List contents from URL"""
+        return http_list(self.urlname, headers=self._headers, *args, **kwargs)
+
     def ping(self, *args, **kwargs) -> bool:
         """Ping URL to check connection"""
         return check_connection(self.urlname, *args, **kwargs)
@@ -347,6 +351,11 @@ class URL:
         """URL parts as a tuple"""
         paths = url_split(self._components.path)
         return (self.scheme, self.netloc, *paths)
+
+    @property
+    def path(self):
+        """URL path"""
+        return self._components.path
 
     @property
     def scheme(self):
@@ -1092,6 +1101,85 @@ def from_json(
         # load JSON response
         json_response = json.loads(response.read())
         return json_response
+
+
+# PURPOSE: list a directory on the MAR server
+def mar_list(
+    HOST: str | list,
+    timeout: int | None = None,
+    context: ssl.SSLContext = _default_ssl_context,
+    parser=lxml.etree.HTMLParser(),
+    pattern: str = "",
+    sort: bool = False,
+):
+    """
+    List a directory from the MAR server at Lèige Université
+
+    Parameters
+    ----------
+    HOST: str or list
+        Remote ``http`` host path
+    timeout: int or NoneType, default None
+        Timeout in seconds for blocking operations
+    context: obj, default FirnCorr.utilities._default_ssl_context
+        ``SSL`` context for ``urllib`` opener object
+    parser: obj, default lxml.etree.HTMLParser()
+        ``HTML`` parser for ``lxml``
+    pattern: str, default ''
+        Regular expression pattern for reducing list
+    sort: bool, default False
+        Sort output list
+
+    Returns
+    -------
+    colnames: list
+        Column names in a directory
+    collastmod: list
+        Last modification times for items in the directory
+    """
+    # verify inputs for remote http host
+    if isinstance(HOST, str):
+        HOST = url_split(HOST)
+    # try listing from http
+    try:
+        # Create and submit request.
+        request = urllib2.Request(posixpath.join(*HOST))
+        response = urllib2.urlopen(request, timeout=timeout, context=context)
+    except urllib2.HTTPError as exc:
+        logging.debug(exc.code)
+        raise
+    except urllib2.URLError as exc:
+        logging.debug(exc.reason)
+        exc.message = "Check internet connection"
+        raise
+    else:
+        # read and parse request for files
+        tree = lxml.etree.parse(response, parser)
+        colnames = tree.xpath("//a/@href")
+        # get the Unix timestamp value for a modification time
+        collastmod = []
+        for s in tree.xpath("//a/following-sibling::text()[1]"):
+            # parse the modification time from the text following the link
+            i = re.sub(r"(\d{4}-\d{2}-\d{2} \d{2}:\d{2}).*", r"\1", s.strip())
+            # convert the modification time into unix time
+            collastmod.append(get_unix_time(i, format="%Y-%m-%d %H:%M"))
+        # validate that columns match modification times
+        if len(colnames) != len(collastmod):
+            raise ValueError("Mismatch between names and modification times")
+        # reduce using regular expression pattern
+        if pattern:
+            i = [i for i, f in enumerate(colnames) if re.search(pattern, f)]
+            # reduce list of column names and last modified times
+            colnames = [colnames[indice] for indice in i]
+            collastmod = [collastmod[indice] for indice in i]
+        # sort the list
+        if sort:
+            i = [i for i, j in sorted(enumerate(colnames), key=lambda i: i[1])]
+            # sort list of column names and last modified times
+            colnames = [colnames[indice] for indice in i]
+            collastmod = [collastmod[indice] for indice in i]
+        # return the list of column names and modification times
+        return colnames, collastmod
 
 
 # PURPOSE: "login" to NASA Earthdata with supplied credentials
