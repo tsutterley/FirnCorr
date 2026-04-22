@@ -20,9 +20,7 @@ UPDATE HISTORY:
 
 from __future__ import print_function
 
-import sys
 import os
-import time
 import logging
 import pathlib
 import argparse
@@ -81,34 +79,45 @@ def fetch_mar_ftp(
         sort=True,
     )
 
-    # sync each data file
-    out = []
-    # set multiprocessing start method
-    ctx = multiprocessing.get_context("fork")
-    # sync in parallel with multiprocessing Pool
-    pool = ctx.Pool(processes=processes)
-    # download remote MAR files to local directory
-    for colname, collastmod in zip(remote_files, remote_times):
-        remote_path = [parsed_ftp.netloc, parsed_ftp.path, colname]
-        local_file = directory.joinpath(colname)
+    # sync each data file (in parallel if processes > 0)
+    if processes > 0:
+        # sync each data file
+        out = []
+        # set multiprocessing start method
+        ctx = multiprocessing.get_context("fork")
+        # sync in parallel with multiprocessing Pool
+        pool = ctx.Pool(processes=processes)
+        # keyword arguments for multiprocessing download function
         kwds = dict(timeout=timeout, clobber=clobber, mode=mode)
-        out.append(
-            pool.apply_async(
-                _multiprocess_download,
-                args=(remote_path, collastmod, local_file),
-                kwds=kwds,
+        # download remote MAR files to local directory
+        for colname, collastmod in zip(remote_files, remote_times):
+            remote_path = [parsed_ftp.netloc, parsed_ftp.path, colname]
+            local_file = directory.joinpath(colname)
+            out.append(
+                pool.apply_async(
+                    _multiprocess_download,
+                    args=(remote_path, collastmod, local_file),
+                    kwds=kwds,
+                )
             )
-        )
-    # start multiprocessing jobs
-    # close the pool
-    # prevents more tasks from being submitted to the pool
-    pool.close()
-    # exit the completed processes
-    pool.join()
-    # print the output string
-    for output in out:
-        temp = output.get()
-        logging.info(temp) if temp else None
+        # start multiprocessing jobs
+        # close the pool
+        # prevents more tasks from being submitted to the pool
+        pool.close()
+        # exit the completed processes
+        pool.join()
+        # print the output string
+        for output in out:
+            temp = output.get()
+            logging.info(temp) if temp else None
+    else:
+        # sync each data file in series
+        kwds = dict(timeout=timeout, clobber=clobber, mode=mode)
+        for colname, collastmod in zip(remote_files, remote_times):
+            remote_path = [parsed_ftp.netloc, parsed_ftp.path, colname]
+            local_file = directory.joinpath(colname)
+            output = _ftp_download(remote_path, collastmod, local_file, **kwds)
+            logging.info(output) if output else None
 
 
 # PURPOSE: wrapper for running the sync program in multiprocessing mode
