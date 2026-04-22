@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 """
 utilities.py
-Written by Tyler Sutterley (09/2024)
+Written by Tyler Sutterley (04/2026)
 Download and management utilities for syncing time and auxiliary files
 
 PYTHON DEPENDENCIES:
     lxml: processing XML and HTML in Python
         https://pypi.python.org/pypi/lxml
+    platformdirs: Python module for determining platform-specific directories
+        https://pypi.org/project/platformdirs/
 
 UPDATE HISTORY:
     Updated 04/2026: added string check to determine if is a valid URL
@@ -32,7 +34,7 @@ UPDATE HISTORY:
     Written 08/2020
 """
 
-from __future__ import print_function, division
+from __future__ import print_function, division, annotations
 
 import sys
 import os
@@ -49,23 +51,42 @@ import inspect
 import hashlib
 import logging
 import pathlib
+import warnings
 import importlib
 import posixpath
+import subprocess
 import lxml.etree
 import platformdirs
 import calendar, time
 import dateutil.parser
 
 if sys.version_info[0] == 2:
+    from urllib import urlencode, quote_plus
     from cookielib import CookieJar
-    from urllib import urlencode
+    from urlparse import urlparse
     import urllib2
-    import urlparse
 else:
+    from urllib.parse import urlencode, quote_plus, urlparse
     from http.cookiejar import CookieJar
-    from urllib.parse import urlencode
     import urllib.request as urllib2
     import urllib.parse as urlparse
+
+
+class reify(object):
+    """Class decorator that puts the result of the method it
+    decorates into the instance"""
+
+    def __init__(self, wrapped):
+        self.wrapped = wrapped
+        self.__name__ = wrapped.__name__
+        self.__doc__ = wrapped.__doc__
+
+    def __get__(self, inst, objtype=None):
+        if inst is None:
+            return self
+        val = self.wrapped(inst)
+        setattr(inst, self.wrapped.__name__, val)
+        return val
 
 
 # PURPOSE: get absolute path within a package from a relative path
@@ -203,6 +224,164 @@ def is_valid_url(url: str) -> bool:
         return False
 
 
+def Path(filename: str | pathlib.Path, *args, **kwargs):
+    """
+    Create a ``URL`` or ``pathlib.Path`` object
+
+    Parameters
+    ----------
+    filename: str or pathlib.Path
+        File path or URL
+    """
+    if is_valid_url(filename):
+        return URL(filename, *args, **kwargs)
+    else:
+        return pathlib.Path(filename, *args, **kwargs).expanduser()
+
+
+class URL:
+    """Handles URLs similar to ``pathlib.Path`` objects"""
+
+    def __init__(self, urlname: str | pathlib.Path, *args, **kwargs):
+        """Initialize a ``URL`` object"""
+        self.urlname = str(urlname)
+        self._raw_paths = list(url_split(self.urlname))
+        self._headers = {}
+
+    @classmethod
+    def from_parts(cls, parts: str | list | tuple):
+        """
+        Return a ``URL`` object from components
+
+        Parameters
+        ----------
+        parts: str, list or tuple
+            URL components
+        """
+        # verify that parts are iterable as list or tuple
+        if isinstance(parts, str):
+            return cls(parts)
+        else:
+            return cls("/".join([*parts]))
+
+    def joinpath(self, *pathsegments: list[str]):
+        """Append URL components to existing
+
+        Parameters
+        ----------
+        pathsegments: list[str]
+            URL components to append
+        """
+        return URL("/".join([*self._raw_paths, *pathsegments]))
+
+    def resolve(self):
+        """Resolve the URL"""
+        return URL("/".join([*self._raw_paths]))
+
+    def is_file(self):
+        """Boolean flag if path is a local file"""
+        return False
+
+    def is_dir(self):
+        """Boolean flag if path is a local directory"""
+        return False
+
+    def geturl(self):
+        """String representation of the ``URL`` object"""
+        return self._components.geturl()
+
+    def get(self, *args, **kwargs):
+        """Get contents from URL"""
+        return from_http(self.urlname, headers=self._headers, *args, **kwargs)
+
+    def headers(self, *args, **kwargs):
+        """Get headers from URL"""
+        self.urlopen(*args, **kwargs)
+        return self._headers
+
+    def load(self, *args, **kwargs):
+        """Load ``JSON`` response from URL"""
+        return from_json(self.urlname, headers=self._headers, *args, **kwargs)
+
+    def ping(self, *args, **kwargs) -> bool:
+        """Ping URL to check connection"""
+        return check_connection(self.urlname, *args, **kwargs)
+
+    def read(self, *args, **kwargs):
+        """Open URL and read response"""
+        return self.urlopen(*args, **kwargs).read()
+
+    def urlopen(self, *args, **kwargs):
+        """Open URL and return response"""
+        request = urllib2.Request(self.urlname)
+        response = urllib2.urlopen(request, *args, **kwargs)
+        self._headers.update(
+            {k.lower(): v for k, v in response.headers.items()}
+        )
+        return response
+
+    @property
+    def name(self):
+        """URL basename"""
+        return pathlib.PurePosixPath(self.urlname).name
+
+    @property
+    def netloc(self):
+        """URL network location"""
+        return self._components.netloc
+
+    @property
+    def parent(self):
+        """URL parent path as a ``URL`` object"""
+        paths = url_split(self.urlname)[:-1]
+        return URL.from_parts(paths)
+
+    @property
+    def parents(self):
+        """URL parents as a list of ``URL`` objects"""
+        paths = url_split(self.urlname)
+        return [URL.from_parts(paths[:i]) for i in range(len(paths) - 1, 0, -1)]
+
+    @property
+    def parts(self):
+        """URL parts as a tuple"""
+        paths = url_split(self._components.path)
+        return (self.scheme, self.netloc, *paths)
+
+    @property
+    def scheme(self):
+        """URL scheme"""
+        return self._components.scheme + "://"
+
+    @property
+    def stem(self):
+        """URL stem"""
+        return pathlib.PurePosixPath(self.urlname).stem
+
+    @property
+    def _components(self):
+        """
+        URL parsed into six components using ``urlparse``
+        """
+        return urlparse(self.urlname)
+
+    def __repr__(self):
+        """Representation of the ``URL`` object"""
+        return str(self.urlname)
+
+    def __str__(self):
+        """String representation of the ``URL`` object"""
+        return str(self.urlname)
+
+    def __div__(self, other):
+        """Join URL components using the division operator"""
+        return self.joinpath(other)
+
+    def __truediv__(self, other):
+        """Join URL components using the division operator"""
+        return self.joinpath(other)
+
+
 def detect_compression(filename: str | pathlib.Path) -> bool:
     """
     Detect if file is compressed based on file extension
@@ -217,7 +396,7 @@ def detect_compression(filename: str | pathlib.Path) -> bool:
     compressed: bool
         Input file is ``gzip`` compressed
     """
-    filename = pathlib.Path(filename).resolve()
+    filename = Path(filename).resolve()
     return bool(re.search(r"\.gz$", filename.name, re.IGNORECASE))
 
 
@@ -280,16 +459,16 @@ def get_hash(
 
 
 # PURPOSE: recursively split a url path
-def url_split(s):
+def url_split(s: str):
     """
-    Recursively split a url path into a list
+    Recursively split a URL path into a list
 
     Parameters
     ----------
     s: str
-        url string
+        URL string
     """
-    head, tail = posixpath.split(s)
+    head, tail = posixpath.split(str(s))
     if head in ("http:", "https:", "ftp:", "s3:"):
         return (s,)
     elif head in ("", posixpath.sep):
@@ -315,16 +494,19 @@ def convert_arg_line_to_args(arg_line):
 
 
 # PURPOSE: returns the Unix timestamp value for a formatted date string
-def get_unix_time(time_string, format="%Y-%m-%d %H:%M:%S"):
+def get_unix_time(
+    time_string: str,
+    format: str = "%Y-%m-%d %H:%M:%S",
+):
     """
     Get the Unix timestamp value for a formatted date string
 
     Parameters
     ----------
     time_string: str
-        formatted time string to parse
+        Formatted time string to parse
     format: str, default '%Y-%m-%d %H:%M:%S'
-        format for input time string
+        Format for input time string
     """
     try:
         parsed_time = time.strptime(time_string.rstrip(), format)
@@ -342,7 +524,7 @@ def get_unix_time(time_string, format="%Y-%m-%d %H:%M:%S"):
 
 
 # PURPOSE: output a time string in isoformat
-def isoformat(time_string):
+def isoformat(time_string: str):
     """
     Reformat a date string to ISO formatting
 
@@ -361,20 +543,20 @@ def isoformat(time_string):
 
 
 # PURPOSE: rounds a number to an even number less than or equal to original
-def even(value):
+def even(value: float):
     """
     Rounds a number to an even number less than or equal to original
 
     Parameters
     ----------
     value: float
-        number to be rounded
+        Number to be rounded
     """
     return 2 * int(value // 2)
 
 
 # PURPOSE: rounds a number upward to its nearest integer
-def ceil(value):
+def ceil(value: float):
     """
     Rounds a number upward to its nearest integer
 
@@ -914,14 +1096,14 @@ def from_json(
 
 # PURPOSE: "login" to NASA Earthdata with supplied credentials
 def build_opener(
-    username,
-    password,
-    context=_default_ssl_context,
-    password_manager=False,
-    get_ca_certs=False,
-    redirect=False,
-    authorization_header=True,
-    urs="https://urs.earthdata.nasa.gov",
+    username: str,
+    password: str,
+    context: ssl.SSLContext = _default_ssl_context,
+    password_manager: bool = False,
+    get_ca_certs: bool = False,
+    redirect: bool = False,
+    authorization_header: bool = True,
+    urs: str = "https://urs.earthdata.nasa.gov",
 ):
     """
     Build ``urllib`` opener for NASA Earthdata with supplied credentials
@@ -970,10 +1152,8 @@ def build_opener(
     # Encode username/password for request authorization headers
     # add Authorization header to opener
     if authorization_header:
-        b64 = base64.b64encode("{0}:{1}".format(username, password).encode())
-        opener.addheaders = [
-            ("Authorization", "Basic {0}".format(b64.decode()))
-        ]
+        b64 = base64.b64encode(f"{username}:{password}".encode())
+        opener.addheaders = [("Authorization", f"Basic {b64.decode()}")]
     # Now all calls to urllib2.urlopen use our opener.
     urllib2.install_opener(opener)
     # All calls to urllib2.urlopen will now use handler
@@ -984,16 +1164,17 @@ def build_opener(
 
 # PURPOSE: list a directory on NASA GES DISC https server
 def gesdisc_list(
-    HOST,
-    username=None,
-    password=None,
-    build=False,
-    timeout=None,
-    urs="urs.earthdata.nasa.gov",
+    HOST: str | list,
+    username: str | None = None,
+    password: str | None = None,
+    build: bool = False,
+    timeout: int | None = None,
+    urs: str = "urs.earthdata.nasa.gov",
+    context: ssl.SSLContext = _default_ssl_context,
     parser=lxml.etree.HTMLParser(),
-    format="%Y-%m-%d %H:%M",
-    pattern="",
-    sort=False,
+    format: str = r"%Y-%m-%d %H:%M",
+    pattern: str = "",
+    sort: bool = False,
 ):
     """
     List a directory on NASA GES DISC servers
@@ -1001,7 +1182,7 @@ def gesdisc_list(
     Parameters
     ----------
     HOST: str or list
-        remote https host
+        Remote ``https`` host
     username: str or NoneType, default None
         NASA Earthdata username
     password: str or NoneType, default None
@@ -1009,17 +1190,17 @@ def gesdisc_list(
     build: bool, default True
         Build opener with NASA Earthdata credentials
     timeout: int or NoneType, default None
-        timeout in seconds for blocking operations
-    urs: str, default 'urs.earthdata.nasa.gov'
-        Earthdata login URS 3 host
+        Timeout in seconds for blocking operations
+    context: obj, default FirnCorr.utilities._default_ssl_context
+        ``SSL`` context for ``urllib`` opener object
     parser: obj, default lxml.etree.HTMLParser()
-        HTML parser for ``lxml``
+        ``HTML`` parser for ``lxml``
     format: str, default '%Y-%m-%d %H:%M'
-        format for input time string
+        Format for input time string
     pattern: str, default ''
-        regular expression pattern for reducing list
+        Regular expression pattern for reducing list
     sort: bool, default False
-        sort output list
+        Sort output list
 
     Returns
     -------
@@ -1047,8 +1228,13 @@ def gesdisc_list(
         # Create and submit request.
         request = urllib2.Request(posixpath.join(*HOST))
         response = urllib2.urlopen(request, timeout=timeout)
-    except (urllib2.HTTPError, urllib2.URLError):
-        raise Exception("List error from {0}".format(posixpath.join(*HOST)))
+    except urllib2.HTTPError as exc:
+        logging.debug(exc.code)
+        raise
+    except urllib2.URLError as exc:
+        logging.debug(exc.reason)
+        exc.message = "Check internet connection"
+        raise
     else:
         # read and parse request for files (column names and modified times)
         tree = lxml.etree.parse(response, parser)
@@ -1076,7 +1262,9 @@ def gesdisc_list(
 
 # PURPOSE: filter the CMR json response for desired data files
 def cmr_filter_json(
-    search_results, endpoint="data", request_type="application/x-netcdf"
+    search_results: dict,
+    endpoint: str = "data",
+    request_type: str = "application/x-netcdf",
 ):
     """
     Filter the CMR json response for desired data files
@@ -1143,15 +1331,15 @@ def cmr_filter_json(
 
 # PURPOSE: cmr queries for GRACE/GRACE-FO products
 def cmr(
-    short_name,
-    version=None,
-    start_date=None,
-    end_date=None,
-    provider="GES_DISC",
-    endpoint="data",
-    request_type="application/x-netcdf",
-    verbose=False,
-    fid=sys.stdout,
+    short_name: str,
+    version: str | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
+    provider: str = "GES_DISC",
+    endpoint: str = "data",
+    request_type: str = "application/x-netcdf",
+    verbose: bool = False,
+    fid: object = sys.stdout,
 ):
     """
     Query the NASA Common Metadata Repository (CMR) for model data
@@ -1213,7 +1401,7 @@ def cmr(
     CMR_HOST = [
         "https://cmr.earthdata.nasa.gov",
         "search",
-        "granules.{0}".format(cmr_format),
+        f"granules.{cmr_format}",
     ]
     # build list of CMR query parameters
     CMR_KEYS = []
@@ -1265,14 +1453,14 @@ def cmr(
 
 # PURPOSE: build requests for the GES DISC subsetting API
 def build_request(
-    short_name,
-    dataset_version,
-    url,
-    variables=[],
-    format="bmM0Lw",
-    service="L34RS_MERRA2",
-    version="1.02",
-    bbox=[-90, -180, 90, 180],
+    short_name: str,
+    dataset_version: str,
+    url: str,
+    variables: list = [],
+    format: str = "bmM0Lw",
+    service: str = "L34RS_MERRA2",
+    version: str = "1.02",
+    bbox: list[int] | list[float] = [-90, -180, 90, 180],
     **kwargs,
 ):
     """
