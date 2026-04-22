@@ -1121,7 +1121,7 @@ def mar_list(
         Remote ``http`` host path
     timeout: int or NoneType, default None
         Timeout in seconds for blocking operations
-    context: obj, default pyTMD.utilities._default_ssl_context
+    context: obj, default FirnCorr.utilities._default_ssl_context
         ``SSL`` context for ``urllib`` opener object
     parser: obj, default lxml.etree.HTMLParser()
         ``HTML`` parser for ``lxml``
