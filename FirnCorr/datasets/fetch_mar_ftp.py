@@ -29,11 +29,14 @@ import posixpath
 import multiprocessing
 import FirnCorr.utilities
 
+# default data directory for SMB and firn models
+_default_directory = FirnCorr.utilities.get_cache_path()
+
 
 # PURPOSE: sync local MAR files with ftp and handle error exceptions
 def fetch_mar_ftp(
     parsed_ftp,
-    directory: str | pathlib.Path | None = None,
+    directory: str | pathlib.Path | None = _default_directory,
     years: list[int] | None = None,
     timeout: int | None = None,
     processes: int = 0,
@@ -47,7 +50,7 @@ def fetch_mar_ftp(
     ----------
     parsed_ftp: ParseResult
         Parsed ftp url from :func:`FirnCorr.utilities.urlparse.urlparse`
-    directory: str or pathlib.Path, default None
+    directory: str or pathlib.Path
         Working data directory
     years: list, default None
         Years to sync
@@ -211,7 +214,11 @@ def arguments():
     parser.add_argument("url", type=str, help="MAR ftp url")
     # working data directory
     parser.add_argument(
-        "--directory", "-D", type=pathlib.Path, help="Working data directory"
+        "--directory",
+        "-D",
+        type=pathlib.Path,
+        default=_default_directory,
+        help="Working data directory",
     )
     # years of data to sync
     parser.add_argument(

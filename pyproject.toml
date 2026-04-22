@@ -64,6 +64,7 @@ all = ["cartopy", "dask", "jupyterlab", "matplotlib", "notebook", "pandas"]
 dev = ["flake8", "gh", "pytest>=4.6", "pytest-cov", "pytest-xdist"]
 
 [project.scripts]
+"fetch_mar_ftp.py" = "FirnCorr.datasets.fetch_mar_ftp:main" 
 
 [tool.setuptools.packages.find]
 exclude = ["providers*", "run*", "test*"]
