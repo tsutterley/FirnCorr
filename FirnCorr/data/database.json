@@ -1,94 +1,380 @@
 {
     "GSFC-fdm-v0": {
         "ais": {
-            "format": "GSFC-fdm",
             "model_file": "GSFC-fdm/v0/gsfc_FAC_ais.nc",
+            "projection": "EPSG:3031",
             "variables": [
                 "FAC"
             ]
         },
+        "format": "GSFC-fdm",
         "gris": {
-            "format": "GSFC-fdm",
             "model_file": "GSFC-fdm/v0/gsfc_FAC_gris.nc",
+            "projection": "EPSG:3413",
             "variables": [
                 "FAC"
             ]
-        }
+        },
+        "name": "GSFC-fdm-v0",
+        "reference": "http://doi.org/10.5194/tc-16-3971-2022",
+        "version": "v0"
     },
     "GSFC-fdm-v1": {
         "ais": {
-            "format": "GSFC-fdm",
             "model_file": "GSFC-fdm/v1/gsfc_fdm_v1_ais.nc",
+            "projection": "EPSG:3031",
             "variables": [
                 "FAC",
                 "cum_smb_anomaly",
                 "height"
             ]
         },
+        "format": "GSFC-fdm",
         "gris": {
-            "format": "GSFC-fdm",
             "model_file": "GSFC-fdm/v1/gsfc_fdm_v1_gris.nc",
+            "projection": "EPSG:3413",
             "variables": [
                 "FAC",
                 "cum_smb_anomaly",
                 "height"
             ]
-        }
+        },
+        "name": "GSFC-fdm-v1",
+        "reference": "http://doi.org/10.5194/tc-16-3971-2022",
+        "version": "v1"
     },
     "GSFC-fdm-v1.0": {
+        "format": "GSFC-fdm",
         "gris": {
-            "format": "GSFC-fdm",
             "model_file": "GSFC-fdm/v1.0/gsfc_fdm_v1_gris.nc",
+            "projection": "EPSG:3413",
             "variables": [
                 "FAC",
                 "cum_smb_anomaly",
                 "height"
             ]
-        }
+        },
+        "name": "GSFC-fdm-v1.0",
+        "reference": "http://doi.org/10.5194/tc-16-3971-2022",
+        "version": "v1.0"
     },
     "GSFC-fdm-v1.1": {
         "ais": {
-            "format": "GSFC-fdm",
             "model_file": "GSFC-fdm/v1.1/gsfc_fdm_v1_1_ais.nc",
+            "projection": "EPSG:3031",
             "variables": [
                 "FAC",
                 "SMB_a",
                 "h_a"
             ]
         },
+        "format": "GSFC-fdm",
         "gris": {
-            "format": "GSFC-fdm",
             "model_file": "GSFC-fdm/v1.1/gsfc_fdm_v1_1_gris.nc",
+            "projection": "EPSG:3413",
             "variables": [
                 "FAC",
                 "SMB_a",
                 "h_a"
             ]
-        }
+        },
+        "name": "GSFC-fdm-v1.1",
+        "reference": "http://doi.org/10.5194/tc-16-3971-2022",
+        "version": "v1.1"
     },
     "GSFC-fdm-v1.2.1": {
         "ais": {
-            "format": "GSFC-fdm",
             "model_file": "GSFC-fdm/v1.2.1/gsfc_fdm_v1_2_1_ais.nc",
+            "projection": "EPSG:3031",
             "variables": [
                 "FAC",
                 "SMB_a",
                 "h_a"
             ]
         },
+        "format": "GSFC-fdm",
         "gris": {
-            "format": "GSFC-fdm",
             "model_file": "GSFC-fdm/v1.2.1/gsfc_fdm_v1_2_1_gris.nc",
+            "projection": "EPSG:3413",
             "variables": [
                 "FAC",
                 "SMB_a",
                 "h_a"
             ]
-        }
+        },
+        "name": "GSFC-fdm-v1.2.1",
+        "reference": "http://doi.org/10.5194/tc-16-3971-2022",
+        "version": "v1.2.1"
+    },
+    "MARv3.11-ERA": {
+        "format": "MAR",
+        "gris": {
+            "model_file": [
+                "MAR/MARv3.11/Greenland/ERA_1958-2019-15km/daily_15km/MARv3.11-ERA5-15km-2018_subset.nc",
+                "MAR/MARv3.11/Greenland/ERA_1958-2019-15km/daily_15km/MARv3.11-ERA5-15km-2019_subset.nc"
+            ],
+            "projection": {
+                "R": 6371229,
+                "k": 1,
+                "lat_0": 70.5,
+                "lat_ts": 0,
+                "lon_0": -40,
+                "no_defs": null,
+                "proj": "sterea",
+                "type": "crs",
+                "units": "km",
+                "x_0": 0,
+                "y_0": 0
+            },
+            "reference": "https://doi.org/10.5194/tc-14-1209-2020",
+            "variables": [
+                "SMB",
+                "ZN4",
+                "ZN5",
+                "ZN6"
+            ]
+        },
+        "name": "MARv3.11",
+        "reanalysis": "ERA",
+        "version": "v3.11"
+    },
+    "MARv3.11-NCEP": {
+        "format": "MAR",
+        "gris": {
+            "model_file": [
+                "MAR/MARv3.11/Greenland/NCEP1_1948-2020_20km/daily_20km/MARv3.11-20km-daily-NCEP-NCARv1-2016.nc",
+                "MAR/MARv3.11/Greenland/NCEP1_1948-2020_20km/daily_20km/MARv3.11-20km-daily-NCEP-NCARv1-2017.nc",
+                "MAR/MARv3.11/Greenland/NCEP1_1948-2020_20km/daily_20km/MARv3.11-20km-daily-NCEP-NCARv1-2018.nc",
+                "MAR/MARv3.11/Greenland/NCEP1_1948-2020_20km/daily_20km/MARv3.11-20km-daily-NCEP-NCARv1-2019.nc"
+            ],
+            "projection": {
+                "R": 6371229,
+                "k": 1,
+                "lat_0": 70.5,
+                "lat_ts": 0,
+                "lon_0": -40,
+                "no_defs": null,
+                "proj": "sterea",
+                "type": "crs",
+                "units": "km",
+                "x_0": 0,
+                "y_0": 0
+            },
+            "reference": "https://doi.org/10.5194/tc-14-1209-2020",
+            "variables": [
+                "SMB"
+            ]
+        },
+        "name": "MARv3.11",
+        "reanalysis": "NCEP",
+        "version": "v3.11"
+    },
+    "MARv3.11.2-ERA-10km": {
+        "format": "MAR",
+        "gris": {
+            "model_file": [
+                "MAR/MARv3.11.2/Greenland/10km_ERA5/MARv3.11.2-ERA5-10km-2018_subset.nc",
+                "MAR/MARv3.11.2/Greenland/10km_ERA5/MARv3.11.2-ERA5-10km-2019_subset.nc",
+                "MAR/MARv3.11.2/Greenland/10km_ERA5/MARv3.11.2-ERA5-10km-2020_subset.nc"
+            ],
+            "projection": {
+                "R": 6371229,
+                "k": 1,
+                "lat_0": 70.5,
+                "lat_ts": 0,
+                "lon_0": -40,
+                "no_defs": null,
+                "proj": "sterea",
+                "type": "crs",
+                "units": "km",
+                "x_0": 0,
+                "y_0": 0
+            },
+            "reference": "https://doi.org/10.5194/tc-14-1209-2020",
+            "variables": [
+                "SMB",
+                "ZN4",
+                "ZN5",
+                "ZN6"
+            ]
+        },
+        "name": "MARv3.11.2",
+        "reanalysis": "ERA",
+        "resolution": "10km",
+        "version": "v3.11.2"
+    },
+    "MARv3.11.2-ERA-15km": {
+        "format": "MAR",
+        "gris": {
+            "model_file": [
+                "MAR/MARv3.11.2/Greenland/15km_ERA5/MARv3.11.2-ERA5-15km-2018_subset.nc",
+                "MAR/MARv3.11.2/Greenland/15km_ERA5/MARv3.11.2-ERA5-15km-2019_subset.nc",
+                "MAR/MARv3.11.2/Greenland/15km_ERA5/MARv3.11.2-ERA5-15km-2020_subset.nc"
+            ],
+            "projection": {
+                "R": 6371229,
+                "k": 1,
+                "lat_0": 70.5,
+                "lat_ts": 0,
+                "lon_0": -40,
+                "no_defs": null,
+                "proj": "sterea",
+                "type": "crs",
+                "units": "km",
+                "x_0": 0,
+                "y_0": 0
+            },
+            "reference": "https://doi.org/10.5194/tc-14-1209-2020",
+            "variables": [
+                "SMB",
+                "ZN4",
+                "ZN5",
+                "ZN6"
+            ]
+        },
+        "name": "MARv3.11.2",
+        "reanalysis": "ERA",
+        "resolution": "15km",
+        "version": "v3.11.2"
+    },
+    "MARv3.11.2-ERA-20km": {
+        "format": "MAR",
+        "gris": {
+            "model_file": [
+                "MAR/MARv3.11.2/Greenland/20km_ERA5/MARv3.11.2-ERA5-20km-2018_subset.nc",
+                "MAR/MARv3.11.2/Greenland/20km_ERA5/MARv3.11.2-ERA5-20km-2019_subset.nc",
+                "MAR/MARv3.11.2/Greenland/20km_ERA5/MARv3.11.2-ERA5-20km-2020_subset.nc"
+            ],
+            "projection": {
+                "R": 6371229,
+                "k": 1,
+                "lat_0": 70.5,
+                "lat_ts": 0,
+                "lon_0": -40,
+                "no_defs": null,
+                "proj": "sterea",
+                "type": "crs",
+                "units": "km",
+                "x_0": 0,
+                "y_0": 0
+            },
+            "reference": "https://doi.org/10.5194/tc-14-1209-2020",
+            "variables": [
+                "SMB",
+                "ZN4",
+                "ZN5",
+                "ZN6"
+            ]
+        },
+        "name": "MARv3.11.2",
+        "reanalysis": "ERA",
+        "resolution": "20km",
+        "version": "v3.11.2"
+    },
+    "MARv3.11.2-ERA-6km": {
+        "format": "MAR",
+        "gris": {
+            "model_file": [
+                "MAR/MARv3.11.2/Greenland/6km_ERA5/MARv3.11.2-ERA5-6km-2018_subset.nc",
+                "MAR/MARv3.11.2/Greenland/6km_ERA5/MARv3.11.2-ERA5-6km-2019_subset.nc",
+                "MAR/MARv3.11.2/Greenland/6km_ERA5/MARv3.11.2-ERA5-6km-2020_subset.nc"
+            ],
+            "projection": {
+                "R": 6371229,
+                "k": 1,
+                "lat_0": 70.5,
+                "lat_ts": 0,
+                "lon_0": -40,
+                "no_defs": null,
+                "proj": "sterea",
+                "type": "crs",
+                "units": "km",
+                "x_0": 0,
+                "y_0": 0
+            },
+            "reference": "https://doi.org/10.5194/tc-14-1209-2020",
+            "variables": [
+                "SMB",
+                "ZN4",
+                "ZN5",
+                "ZN6"
+            ]
+        },
+        "name": "MARv3.11.2",
+        "reanalysis": "ERA",
+        "resolution": "6km",
+        "version": "v3.11.2"
+    },
+    "MARv3.11.2-ERA-7.5km": {
+        "format": "MAR",
+        "gris": {
+            "model_file": [
+                "MAR/MARv3.11.2/Greenland/7.5km_ERA5/MARv3.11.2-ERA5-7.5km-2018_subset.nc",
+                "MAR/MARv3.11.2/Greenland/7.5km_ERA5/MARv3.11.2-ERA5-7.5km-2019_subset.nc"
+            ],
+            "projection": {
+                "R": 6371229,
+                "k": 1,
+                "lat_0": 70.5,
+                "lat_ts": 0,
+                "lon_0": -40,
+                "no_defs": null,
+                "proj": "sterea",
+                "type": "crs",
+                "units": "km",
+                "x_0": 0,
+                "y_0": 0
+            },
+            "reference": "https://doi.org/10.5194/tc-14-1209-2020",
+            "variables": [
+                "SMB",
+                "ZN4",
+                "ZN5",
+                "ZN6"
+            ]
+        },
+        "name": "MARv3.11.2",
+        "reanalysis": "ERA",
+        "resolution": "7.5km",
+        "version": "v3.11.2"
+    },
+    "MARv3.11.2-NCEP-20km": {
+        "format": "MAR",
+        "gris": {
+            "model_file": [
+                "MAR/MARv3.11.2/Greenland/20km_NCEP1/MARv3.11.2-NCEP1-20km-2018_subset.nc",
+                "MAR/MARv3.11.2/Greenland/20km_NCEP1/MARv3.11.2-NCEP1-20km-2019_subset.nc",
+                "MAR/MARv3.11.2/Greenland/20km_NCEP1/MARv3.11.2-NCEP1-20km-2020_subset.nc"
+            ],
+            "projection": {
+                "R": 6371229,
+                "k": 1,
+                "lat_0": 70.5,
+                "lat_ts": 0,
+                "lon_0": -40,
+                "no_defs": null,
+                "proj": "sterea",
+                "type": "crs",
+                "units": "km",
+                "x_0": 0,
+                "y_0": 0
+            },
+            "reference": "https://doi.org/10.5194/tc-14-1209-2020",
+            "variables": [
+                "SMB",
+                "ZN4",
+                "ZN5",
+                "ZN6"
+            ]
+        },
+        "name": "MARv3.11.2",
+        "reanalysis": "NCEP",
+        "resolution": "20km",
+        "version": "v3.11.2"
     },
     "MARv3.11.5-ERA-10km": {
+        "format": "MAR",
         "gris": {
-            "format": "MAR",
             "model_file": [
                 "MAR/MARv3.11.5/Greenland/ERA5_1950-2020-10km/daily_10km/MARv3.11.5-10km-daily-ERA5-1950.nc",
                 "MAR/MARv3.11.5/Greenland/ERA5_1950-2020-10km/daily_10km/MARv3.11.5-10km-daily-ERA5-1951.nc",
@@ -162,17 +448,103 @@
                 "MAR/MARv3.11.5/Greenland/ERA5_1950-2020-10km/daily_10km/MARv3.11.5-10km-daily-ERA5-2019.nc",
                 "MAR/MARv3.11.5/Greenland/ERA5_1950-2020-10km/daily_10km/MARv3.11.5-10km-daily-ERA5-2020.nc"
             ],
+            "projection": {
+                "R": 6371229,
+                "k": 1,
+                "lat_0": 70.5,
+                "lat_ts": 0,
+                "lon_0": -40,
+                "no_defs": null,
+                "proj": "sterea",
+                "type": "crs",
+                "units": "km",
+                "x_0": 0,
+                "y_0": 0
+            },
+            "reference": "https://doi.org/10.5194/tc-14-1209-2020",
             "variables": [
                 "SMB",
                 "ZN4",
                 "ZN5",
                 "ZN6"
             ]
-        }
+        },
+        "name": "MARv3.11.5",
+        "reanalysis": "ERA",
+        "resolution": "10km",
+        "version": "v3.11.5"
+    },
+    "MARv3.11.5-ERA-15km": {
+        "format": "MAR",
+        "gris": {
+            "model_file": [
+                "MAR/MARv3.11.5/Greenland/15km_ERA5/MARv3.11.5-ERA5-15km-2018_subset.nc",
+                "MAR/MARv3.11.5/Greenland/15km_ERA5/MARv3.11.5-ERA5-15km-2019_subset.nc",
+                "MAR/MARv3.11.5/Greenland/15km_ERA5/MARv3.11.5-ERA5-15km-2020_subset.nc"
+            ],
+            "projection": {
+                "R": 6371229,
+                "k": 1,
+                "lat_0": 70.5,
+                "lat_ts": 0,
+                "lon_0": -40,
+                "no_defs": null,
+                "proj": "sterea",
+                "type": "crs",
+                "units": "km",
+                "x_0": 0,
+                "y_0": 0
+            },
+            "reference": "https://doi.org/10.5194/tc-14-1209-2020",
+            "variables": [
+                "SMB",
+                "ZN4",
+                "ZN5",
+                "ZN6"
+            ]
+        },
+        "name": "MARv3.11.5",
+        "reanalysis": "ERA",
+        "resolution": "15km",
+        "version": "v3.11.5"
+    },
+    "MARv3.11.5-ERA-20km": {
+        "format": "MAR",
+        "gris": {
+            "model_file": [
+                "MAR/MARv3.11.5/Greenland/20km_ERA5/MARv3.11.5-ERA5-20km-2018_subset.nc",
+                "MAR/MARv3.11.5/Greenland/20km_ERA5/MARv3.11.5-ERA5-20km-2019_subset.nc",
+                "MAR/MARv3.11.5/Greenland/20km_ERA5/MARv3.11.5-ERA5-20km-2020_subset.nc"
+            ],
+            "projection": {
+                "R": 6371229,
+                "k": 1,
+                "lat_0": 70.5,
+                "lat_ts": 0,
+                "lon_0": -40,
+                "no_defs": null,
+                "proj": "sterea",
+                "type": "crs",
+                "units": "km",
+                "x_0": 0,
+                "y_0": 0
+            },
+            "reference": "https://doi.org/10.5194/tc-14-1209-2020",
+            "variables": [
+                "SMB",
+                "ZN4",
+                "ZN5",
+                "ZN6"
+            ]
+        },
+        "name": "MARv3.11.5",
+        "reanalysis": "ERA",
+        "resolution": "20km",
+        "version": "v3.11.5"
     },
     "MARv3.11.5-ERA-6km": {
+        "format": "MAR",
         "gris": {
-            "format": "MAR",
             "model_file": [
                 "MAR/MARv3.11.5/Greenland/ERA5_1950-2021-6km/MARv3.11.5-Greenland-6km-daily-ERA-1950.nc",
                 "MAR/MARv3.11.5/Greenland/ERA5_1950-2021-6km/MARv3.11.5-Greenland-6km-daily-ERA-1951.nc",
@@ -247,17 +619,34 @@
                 "MAR/MARv3.11.5/Greenland/ERA5_1950-2021-6km/MARv3.11.5-Greenland-6km-daily-ERA-2020.nc",
                 "MAR/MARv3.11.5/Greenland/ERA5_1950-2021-6km/MARv3.11.5-Greenland-6km-daily-ERA-2021.nc"
             ],
+            "projection": {
+                "R": 6371229,
+                "k": 1,
+                "lat_0": 70.5,
+                "lat_ts": 0,
+                "lon_0": -40,
+                "no_defs": null,
+                "proj": "sterea",
+                "type": "crs",
+                "units": "km",
+                "x_0": 0,
+                "y_0": 0
+            },
+            "reference": "https://doi.org/10.5194/tc-14-1209-2020",
             "variables": [
                 "SMB",
                 "ZN4",
                 "ZN5",
                 "ZN6"
             ]
-        }
+        },
+        "name": "MARv3.11.5",
+        "reanalysis": "ERA",
+        "resolution": "6km",
+        "version": "v3.11.5"
     },
     "MARv3.12": {
         "ais": {
-            "format": "MAR",
             "model_file": [
                 "MAR/MARv3.12/Antarctica/MARv3.12-1980.nc",
                 "MAR/MARv3.12/Antarctica/MARv3.12-1981.nc",
@@ -306,17 +695,30 @@
                 "MAR/MARv3.12/Antarctica/MARv3.12-2024.nc",
                 "MAR/MARv3.12/Antarctica/MARv3.12-2025.nc"
             ],
+            "projection": {
+                "datum": "WGS84",
+                "lat_0": -90,
+                "lat_ts": -71,
+                "lon_0": 0,
+                "no_defs": null,
+                "proj": "stere",
+                "type": "crs",
+                "units": "km"
+            },
+            "reference": "https://doi.org/10.5194/tc-12-3827-2018",
             "variables": [
                 "SMB",
                 "ZN4",
                 "ZN5",
                 "ZN6"
             ]
-        }
+        },
+        "format": "MAR",
+        "name": "MARv3.12",
+        "version": "v3.12"
     },
     "MARv3.14": {
         "ais": {
-            "format": "MAR",
             "model_file": [
                 "MAR/MARv3.14/Antarctica/MARv3.14.3-27.5km-daily-ERA5-1979.nc",
                 "MAR/MARv3.14/Antarctica/MARv3.14.3-27.5km-daily-ERA5-1980.nc",
@@ -367,17 +769,31 @@
                 "MAR/MARv3.14/Antarctica/MARv3.14.3-27.5km-daily-ERA5-2025.nc",
                 "MAR/MARv3.14/Antarctica/MARv3.14.3-27.5km-daily-ERA5-2026.nc"
             ],
+            "projection": {
+                "datum": "WGS84",
+                "lat_0": -90,
+                "lat_ts": -71,
+                "lon_0": 0,
+                "no_defs": null,
+                "proj": "stere",
+                "type": "crs",
+                "units": "km"
+            },
+            "reference": "https://doi.org/10.5194/tc-12-3827-2018",
             "variables": [
                 "SMB",
                 "ZN4",
                 "ZN5",
                 "ZN6"
             ]
-        }
+        },
+        "format": "MAR",
+        "name": "MARv3.14",
+        "version": "v3.14"
     },
     "MARv3.14-ERA-10km": {
+        "format": "MAR",
         "gris": {
-            "format": "MAR",
             "model_file": [
                 "MAR/MARv3.14/Greenland/ERA5-10km-daily/MARv3.14.3-10km-daily-ERA5-1940.nc",
                 "MAR/MARv3.14/Greenland/ERA5-10km-daily/MARv3.14.3-10km-daily-ERA5-1941.nc",
@@ -467,17 +883,35 @@
                 "MAR/MARv3.14/Greenland/ERA5-10km-daily/MARv3.14.3-10km-daily-ERA5-2025.nc",
                 "MAR/MARv3.14/Greenland/ERA5-10km-daily/MARv3.14.3-10km-daily-ERA5-2026.nc"
             ],
+            "projection": {
+                "R": 6371229,
+                "k": 1,
+                "lat_0": 70.5,
+                "lat_ts": 0,
+                "lon_0": -40,
+                "no_defs": null,
+                "proj": "sterea",
+                "type": "crs",
+                "units": "km",
+                "x_0": 0,
+                "y_0": 0
+            },
+            "reference": "https://doi.org/10.5194/tc-14-1209-2020",
             "variables": [
                 "SMB",
                 "ZN4",
                 "ZN5",
                 "ZN6"
             ]
-        }
+        },
+        "name": "MARv3.14",
+        "reanalysis": "ERA",
+        "resolution": "10km",
+        "version": "v3.14"
     },
     "MARv3.14-ERA-1km": {
+        "format": "MAR",
         "gris": {
-            "format": "MAR",
             "model_file": [
                 "MAR/MARv3.14/Greenland/ERA5-1km-monthly/MARv3.14-monthly-ERA5-1940.nc",
                 "MAR/MARv3.14/Greenland/ERA5-1km-monthly/MARv3.14-monthly-ERA5-1941.nc",
@@ -566,12 +1000,118 @@
                 "MAR/MARv3.14/Greenland/ERA5-1km-monthly/MARv3.14-monthly-ERA5-2024.nc",
                 "MAR/MARv3.14/Greenland/ERA5-1km-monthly/MARv3.14-monthly-ERA5-2025.nc"
             ],
+            "projection": {
+                "R": 6371229,
+                "k": 1,
+                "lat_0": 70.5,
+                "lat_ts": 0,
+                "lon_0": -40,
+                "no_defs": null,
+                "proj": "sterea",
+                "type": "crs",
+                "units": "km",
+                "x_0": 0,
+                "y_0": 0
+            },
+            "reference": "https://doi.org/10.5194/tc-14-1209-2020",
             "variables": [
                 "SMB",
                 "ZN4",
                 "ZN5",
                 "ZN6"
             ]
-        }
+        },
+        "name": "MARv3.14",
+        "reanalysis": "ERA",
+        "resolution": "1km",
+        "version": "v3.14"
+    },
+    "MARv3.9-ERA": {
+        "format": "MAR",
+        "gris": {
+            "model_file": [
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-1958.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-1959.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-1960.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-1961.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-1962.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-1963.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-1964.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-1965.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-1966.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-1967.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-1968.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-1969.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-1970.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-1971.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-1972.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-1973.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-1974.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-1975.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-1976.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-1977.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-1978.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-1979.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-1980.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-1981.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-1982.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-1983.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-1984.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-1985.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-1986.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-1987.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-1988.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-1989.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-1990.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-1991.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-1992.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-1993.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-1994.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-1995.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-1996.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-1997.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-1998.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-1999.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-2000.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-2001.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-2002.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-2003.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-2004.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-2005.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-2006.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-2007.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-2008.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-2009.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-2010.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-2011.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-2012.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-2013.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-2014.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-2015.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-2016.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-2017.nc",
+                "MAR/MARv3.9/Greenland/ERA_1958-2018_10km/daily_10km/MARv3.9.6-10km-daily-ERA-2018.nc"
+            ],
+            "projection": {
+                "R": 6371229,
+                "k": 1,
+                "lat_0": 70.5,
+                "lat_ts": 0,
+                "lon_0": -40,
+                "no_defs": null,
+                "proj": "sterea",
+                "type": "crs",
+                "units": "km",
+                "x_0": 0,
+                "y_0": 0
+            },
+            "reference": "https://doi.org/10.5194/tc-14-1209-2020",
+            "variables": [
+                "SMB"
+            ]
+        },
+        "name": "MARv3.9",
+        "reanalysis": "ERA",
+        "version": "v3.9"
     }
 }

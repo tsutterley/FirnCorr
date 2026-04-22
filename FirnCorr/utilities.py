@@ -112,7 +112,7 @@ def get_data_path(relpath: list | str | pathlib.Path):
 # PURPOSE: get the path to the user cache directory
 def get_cache_path(
     relpath: list | str | pathlib.Path | None = None,
-    appname="FirnCorr",
+    appname="firncorr",
 ):
     """
     Get the path to the user cache directory for an application
@@ -121,7 +121,7 @@ def get_cache_path(
     ----------
     relpath: list, str, pathlib.Path or None
         Relative path
-    appname: str, default 'FirnCorr'
+    appname: str, default 'firncorr'
         Application name
     """
     # get platform-specific cache directory
