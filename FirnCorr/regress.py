@@ -44,17 +44,17 @@ def regress(
     Parameters
     ----------
     t_in: float
-        input time array
+        Time array
     d_in: float
-        input data array
+        Data array
     order: int, default 2
-        maximum polynomial order in fit
+        Maximum polynomial order in fit
 
             * ``0``: constant
             * ``1``: linear
             * ``2``: quadratic
     cycles: list, default [0.25,0.5,1.0,2.0,4.0,5.0]
-        list of cyclical terms
+        Cyclical terms
     relative: float or List, default Ellipsis
         Epoch for calculating relative dates
 
@@ -65,7 +65,7 @@ def regress(
     Returns
     -------
     d_out: float
-        reconstructed time series
+        Reconstructed time series
     """
 
     # remove singleton dimensions

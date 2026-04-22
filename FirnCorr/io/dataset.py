@@ -141,7 +141,7 @@ class Dataset:
         Parameters
         ----------
         bounds: list, tuple
-            Bounding box [min_x, max_x, min_y, max_y]
+            Bounding box ``[min_x, max_x, min_y, max_y]``
         buffer: int or float, default 0
             Buffer to add to bounds for cropping
         """
@@ -197,7 +197,7 @@ class Dataset:
         other: xarray.Dataset
             ``Dataset`` with missing values to be extrapolated
         kwargs: dict
-            Keyword arguments for :func:`FirnCorr.interpolate._nearest_neighbors`
+            Keyword arguments for :py:func:`FirnCorr.interpolate._nearest_neighbors`
 
         Returns
         -------
@@ -392,7 +392,7 @@ class Dataset:
         Parameters
         ----------
         kwargs: dict
-            Keyword arguments for :func:`FirnCorr.interpolate.inpaint`
+            Keyword arguments for :py:func:`FirnCorr.interpolate.inpaint`
 
         Returns
         -------
