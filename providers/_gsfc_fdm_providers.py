@@ -51,6 +51,10 @@ def main():
     models["ais"].append("GSFC-fdm-v1")
     models["ais"].append("GSFC-fdm-v1.1")
     models["ais"].append("GSFC-fdm-v1.2.1")
+    # coordinate reference system
+    EPSG = {"gris": "EPSG:3413", "ais": "EPSG:3031"}
+    # model reference
+    reference = "http://doi.org/10.5194/tc-16-3971-2022"
 
     # regular expression pattern for extracting version
     rx = re.compile(r"GSFC-fdm-((v\d+)(\.\d+)?(\.\d+)?)$")
@@ -89,7 +93,11 @@ def main():
             # append to output dictionary
             output[model_version][region]["model_file"] = filename
             output[model_version][region]["variables"] = variables
-            output[model_version][region]["format"] = "GSFC-fdm"
+            output[model_version][region]["projection"] = EPSG[region]
+            output[model_version]["format"] = "GSFC-fdm"
+            output[model_version]["name"] = model_version
+            output[model_version]["reference"] = reference
+            output[model_version]["version"] = fdm_version
 
     # writing model parameters to JSON database file
     json_file = filepath.joinpath("GSFC.json")

@@ -34,8 +34,10 @@ import xarray as xr
 warnings.filterwarnings("ignore", category=UserWarning)
 
 __all__ = [
+    "DataTree",
     "Dataset",
     "DataArray",
+    "register_datatree_subaccessor",
     "register_dataset_subaccessor",
     "register_dataarray_subaccessor",
     "_transform",
@@ -57,7 +59,197 @@ _default_units = {
 }
 
 
-@xr.register_dataset_accessor("smb")
+@xr.register_datatree_accessor("fcorr")
+class DataTree:
+    """Accessor for extending an ``xarray.DataTree`` for SMB and firn data"""
+
+    def __init__(self, dtree):
+        # initialize DataTree
+        self._dtree = dtree
+
+    def assign_coords(
+        self,
+        x: np.ndarray,
+        y: np.ndarray,
+        crs: str | int | dict = 4326,
+        **kwargs,
+    ):
+        """
+        Assign new coordinates to the ``DataTree``
+
+        Parameters
+        ----------
+        x: np.ndarray
+            Updated x-coordinates
+        y: np.ndarray
+            Updated y-coordinates
+        crs: str, int, or dict, default 4326 (WGS84 Latitude/Longitude)
+            Coordinate reference system of coordinates
+        kwargs: dict
+            Keyword arguments for ``xarray.Dataset.assign_coords``
+
+        Returns
+        -------
+        dtree: xarray.DataTree
+            ``DataTree`` with updated coordinates
+        """
+        # assign new coordinates to each dataset
+        dtree = self._dtree.copy()
+        for key, ds in self._dtree.items():
+            ds = ds.to_dataset().assign_coords(dict(x=x, y=y), **kwargs)
+            ds.attrs["crs"] = crs
+            dtree[key] = ds
+        # return the datatree
+        return dtree
+
+    def coords_as(
+        self,
+        x: np.ndarray,
+        y: np.ndarray,
+        crs: str | int | dict = 4326,
+        **kwargs,
+    ):
+        """
+        Transform coordinates into ``DataArrays`` in the ``DataTree``
+        coordinate reference system
+
+        Parameters
+        ----------
+        x: np.ndarray
+            Input x-coordinates
+        y: np.ndarray
+            Input y-coordinates
+        crs: str, int, or dict, default 4326 (WGS84 Latitude/Longitude)
+            Coordinate reference system of input coordinates
+
+        Returns
+        -------
+        X: xarray.DataArray
+            Transformed x-coordinates
+        Y: xarray.DataArray
+            Transformed y-coordinates
+        """
+        # convert coordinate reference system to that of the datatree
+        # and format as xarray DataArray with appropriate dimensions
+        X, Y = _coords(x, y, source_crs=crs, target_crs=self.crs, **kwargs)
+        # return the transformed coordinates
+        return X, Y
+
+    def crop(self, *args, **kwargs):
+        """
+        Crop ``DataTree`` to input bounding box
+        """
+        # create copy of datatree
+        dtree = self._dtree.copy()
+        # crop each dataset in the datatree
+        for key, ds in dtree.items():
+            ds = ds.to_dataset()
+            dtree[key] = ds.fcorr.crop(*args, **kwargs)
+        # return the datatree
+        return dtree
+
+    def inpaint(self, **kwargs):
+        """
+        Inpaint over missing data in ``DataTree``
+        """
+        # create copy of datatree
+        dtree = self._dtree.copy()
+        # inpaint each dataset in the datatree
+        for key, ds in dtree.items():
+            ds = ds.to_dataset()
+            dtree[key] = ds.fcorr.inpaint(**kwargs)
+        # return the datatree
+        return dtree
+
+    def interp(
+        self,
+        x: np.ndarray,
+        y: np.ndarray,
+        **kwargs,
+    ):
+        """
+        Interpolate ``DataTree`` to new coordinates
+
+        Parameters
+        ----------
+        x: np.ndarray
+            Interpolation x-coordinates
+        y: np.ndarray
+            Interpolation y-coordinates
+        """
+        # create copy of datatree
+        dtree = self._dtree.copy()
+        # interpolate each dataset in the datatree
+        for key, ds in dtree.items():
+            ds = ds.to_dataset()
+            dtree[key] = ds.fcorr.interp(x, y, **kwargs)
+        # return the datatree
+        return dtree
+
+    def subset(self, c: str | list):
+        """
+        Reduce to a subset of constituents
+
+        Parameters
+        ----------
+        c: str or list
+            List of constituents names
+        """
+        # create copy of datatree
+        dtree = self._dtree.copy()
+        # subset each dataset in the datatree
+        for key, ds in dtree.items():
+            ds = ds.to_dataset()
+            dtree[key] = ds.fcorr.subset(c)
+        # return the datatree
+        return dtree
+
+    def transform_as(
+        self,
+        x: np.ndarray,
+        y: np.ndarray,
+        crs: str | int | dict = 4326,
+        **kwargs,
+    ):
+        """
+        Transform coordinates to/from the ``DataTree`` coordinate reference system
+
+        Parameters
+        ----------
+        x: np.ndarray
+            Input x-coordinates
+        y: np.ndarray
+            Input y-coordinates
+        crs: str, int, or dict, default 4326 (WGS84 Latitude/Longitude)
+            Coordinate reference system of input coordinates
+        direction: str, default 'FORWARD'
+            Direction of transformation
+
+            - ``'FORWARD'``: from input crs to model crs
+            - ``'INVERSE'``: from model crs to input crs
+
+        Returns
+        -------
+        X: np.ndarray
+            Transformed x-coordinates
+        Y: np.ndarray
+            Transformed y-coordinates
+        """
+        # convert coordinate reference system to that of the datatree
+        X, Y = _transform(x, y, source_crs=crs, target_crs=self.crs, **kwargs)
+        # return the transformed coordinates
+        return (X, Y)
+
+    @property
+    def crs(self):
+        """Coordinate reference system of the ``DataTree``"""
+        # inherit CRS from one of the datasets
+        for key, ds in self._dtree.items():
+            ds = ds.to_dataset()
+            return ds.fcorr.crs
+
+
+@xr.register_dataset_accessor("fcorr")
 class Dataset:
     """Accessor for extending an ``xarray.Dataset`` for SMB and firn data"""
 
@@ -587,7 +779,7 @@ class Dataset:
         ds = self._ds.copy()
         # convert each variable in the dataset
         for k in ds.data_vars.keys():
-            ds[k] = ds[k].smb.to_units(units, value=value)
+            ds[k] = ds[k].fcorr.to_units(units, value=value)
         # return the dataset
         return ds
 
@@ -597,7 +789,7 @@ class Dataset:
         ds = self._ds.copy()
         # convert each variable in the dataset
         for k in ds.data_vars.keys():
-            ds[k] = ds[k].smb.to_base_units()
+            ds[k] = ds[k].fcorr.to_base_units()
         # return the dataset
         return ds
 
@@ -607,7 +799,7 @@ class Dataset:
         ds = self._ds.copy()
         # convert each variable in the dataset
         for k in ds.data_vars.keys():
-            ds[k] = ds[k].smb.to_default_units()
+            ds[k] = ds[k].fcorr.to_default_units()
         # return the dataset
         return ds
 
@@ -650,7 +842,7 @@ class Dataset:
         return self._ds.y.values
 
 
-@xr.register_dataarray_accessor("smb")
+@xr.register_dataarray_accessor("fcorr")
 class DataArray:
     """Accessor for extending an ``xarray.DataArray`` for SMB and firn data"""
 
@@ -786,6 +978,17 @@ class DataArray:
             return False
         else:
             return True
+
+
+def register_datatree_subaccessor(name):
+    """Register a custom subaccessor on ``DataTree`` objects
+
+    Parameters
+    ----------
+    name: str
+        Name of the subaccessor
+    """
+    return xr.core.extensions._register_accessor(name, DataTree)
 
 
 def register_dataset_subaccessor(name):

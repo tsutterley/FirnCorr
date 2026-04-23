@@ -1,89 +1,109 @@
 {
     "GSFC-fdm-v0": {
         "ais": {
-            "format": "GSFC-fdm",
             "model_file": "GSFC-fdm/v0/gsfc_FAC_ais.nc",
+            "projection": "EPSG:3031",
             "variables": [
                 "FAC"
             ]
         },
+        "format": "GSFC-fdm",
         "gris": {
-            "format": "GSFC-fdm",
             "model_file": "GSFC-fdm/v0/gsfc_FAC_gris.nc",
+            "projection": "EPSG:3413",
             "variables": [
                 "FAC"
             ]
-        }
+        },
+        "name": "GSFC-fdm-v0",
+        "reference": "http://doi.org/10.5194/tc-16-3971-2022",
+        "version": "v0"
     },
     "GSFC-fdm-v1": {
         "ais": {
-            "format": "GSFC-fdm",
             "model_file": "GSFC-fdm/v1/gsfc_fdm_v1_ais.nc",
+            "projection": "EPSG:3031",
             "variables": [
                 "FAC",
                 "cum_smb_anomaly",
                 "height"
             ]
         },
+        "format": "GSFC-fdm",
         "gris": {
-            "format": "GSFC-fdm",
             "model_file": "GSFC-fdm/v1/gsfc_fdm_v1_gris.nc",
+            "projection": "EPSG:3413",
             "variables": [
                 "FAC",
                 "cum_smb_anomaly",
                 "height"
             ]
-        }
+        },
+        "name": "GSFC-fdm-v1",
+        "reference": "http://doi.org/10.5194/tc-16-3971-2022",
+        "version": "v1"
     },
     "GSFC-fdm-v1.0": {
+        "format": "GSFC-fdm",
         "gris": {
-            "format": "GSFC-fdm",
             "model_file": "GSFC-fdm/v1.0/gsfc_fdm_v1_gris.nc",
+            "projection": "EPSG:3413",
             "variables": [
                 "FAC",
                 "cum_smb_anomaly",
                 "height"
             ]
-        }
+        },
+        "name": "GSFC-fdm-v1.0",
+        "reference": "http://doi.org/10.5194/tc-16-3971-2022",
+        "version": "v1.0"
     },
     "GSFC-fdm-v1.1": {
         "ais": {
-            "format": "GSFC-fdm",
             "model_file": "GSFC-fdm/v1.1/gsfc_fdm_v1_1_ais.nc",
+            "projection": "EPSG:3031",
             "variables": [
                 "FAC",
                 "SMB_a",
                 "h_a"
             ]
         },
+        "format": "GSFC-fdm",
         "gris": {
-            "format": "GSFC-fdm",
             "model_file": "GSFC-fdm/v1.1/gsfc_fdm_v1_1_gris.nc",
+            "projection": "EPSG:3413",
             "variables": [
                 "FAC",
                 "SMB_a",
                 "h_a"
             ]
-        }
+        },
+        "name": "GSFC-fdm-v1.1",
+        "reference": "http://doi.org/10.5194/tc-16-3971-2022",
+        "version": "v1.1"
     },
     "GSFC-fdm-v1.2.1": {
         "ais": {
-            "format": "GSFC-fdm",
             "model_file": "GSFC-fdm/v1.2.1/gsfc_fdm_v1_2_1_ais.nc",
+            "projection": "EPSG:3031",
             "variables": [
                 "FAC",
                 "SMB_a",
                 "h_a"
             ]
         },
+        "format": "GSFC-fdm",
         "gris": {
-            "format": "GSFC-fdm",
             "model_file": "GSFC-fdm/v1.2.1/gsfc_fdm_v1_2_1_gris.nc",
+            "projection": "EPSG:3413",
             "variables": [
                 "FAC",
                 "SMB_a",
                 "h_a"
             ]
-        }
+        },
+        "name": "GSFC-fdm-v1.2.1",
+        "reference": "http://doi.org/10.5194/tc-16-3971-2022",
+        "version": "v1.2.1"
     }
 }

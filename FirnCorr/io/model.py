@@ -173,7 +173,7 @@ class model:
     def from_database(
         self,
         m: str,
-        region: str,
+        group: tuple = ("ais", "gris"),
     ):
         """
         Create a model object from database of known models
@@ -182,26 +182,31 @@ class model:
         ----------
         m: str
             Model name
-        region: str
-            Model region to extract
+        group: tuple, default ("ais", "gris")
+            Model region(s) to extract
         """
         # set working data directory if unset
         if self.directory is None:
             self.directory = pathlib.Path(_default_directory)
         # select between known models
         parameters = load_database(extra_databases=self.extra_databases)
-        # validate region
-        g = region.lower()
         # try to extract parameters for model
         try:
-            self.from_dict(parameters[m][g])
+            self.from_dict(parameters[m])
         except (ValueError, KeyError, AttributeError) as exc:
-            raise ValueError(f"Unlisted model {m} for region {g}") from exc
-        # set model name and region
-        self.name = m
-        self.region = g
-        # validate paths: model files
-        self.model_file = self.pathfinder(self.model_file)
+            raise ValueError(f"Unlisted model {m}") from exc
+        # verify model types to extract
+        if isinstance(group, str):
+            group = (group,)
+        # verify paths
+        for g in group:
+            # verify model region is valid
+            g = g.lower()
+            # skip if model region is unavailable
+            if not hasattr(self, g):
+                continue
+            # validate paths: model constituent files
+            self[g].model_file = self.pathfinder(self[g].model_file)
         # return the model parameters
         self.validate_format()
         # set dictionary of parameters
@@ -242,6 +247,8 @@ class model:
         d: dict
             Model object parameters
         """
+        # copy model parameters
+        self.__parameters__ = copy.copy(d)
         for key, val in d.items():
             if isinstance(val, dict) and key not in ("projection",):
                 setattr(self, key, DataBase(val))
@@ -262,9 +269,9 @@ class model:
             Serialize dictionary for ``JSON`` output
         """
         # default fields
-        fields = ["name", "format", "projection", "reference", "region"]
+        fields = ["name", "format", "projection", "reference"]
         # set default keyword arguments
-        kwargs.setdefault("fields", fields)
+        kwargs.setdefault("fields", fields + ["ais", "gris"])
         kwargs.setdefault("serialize", False)
         # output dictionary
         d = {}
@@ -365,6 +372,25 @@ class model:
         # raise an exception
         raise IOError("Cannot load model definition file")
 
+    def _parse_json(self, fid: io.IOBase):
+        """
+        Load and parse ``JSON`` definition file
+
+        Parameters
+        ----------
+        fid: io.IOBase
+            Open definition file object
+        """
+        # load JSON file
+        parameters = json.load(fid)
+        # convert from dictionary to model variable
+        temp = self.from_dict(parameters)
+        # verify model name and format
+        assert temp.name
+        temp.validate_format()
+        # return the model parameters
+        return temp
+
     def validate_format(self):
         """Asserts that the model format is a known type"""
         # assert that model is a known format
@@ -403,7 +429,7 @@ class model:
 
     def open_dataset(self, **kwargs):
         """
-        Open SMB and firn model files
+        Open model files as an xarray Dataset
 
         Parameters
         ----------
@@ -421,28 +447,33 @@ class model:
         # set default keyword arguments
         kwargs.setdefault("use_default_units", False)
         kwargs.setdefault("compressed", self.compressed)
+        # model group to extract
+        group = kwargs.get("group", "").lower()
+        assert group in ("ais", "gris"), f"Invalid model group {group}"
+        # extract model file
+        model_file = self[group].get("model_file")
+        # extract default model variables
+        kwargs.setdefault("variable", self[group].get("variables"))
         # extract dataset from model file(s)
         if self.engine == "GSFC":
             # open GSFCfdm file(s) as xarray Dataset
-            kwargs.setdefault("variable", ["FAC", "SMB_a", "h_a"])
-            ds = GSFCfdm.open_dataset(self.model_file, **kwargs)
+            ds = GSFCfdm.open_dataset(model_file, **kwargs)
         elif self.engine == "MAR":
             # open MAR file(s) as xarray Dataset
-            kwargs.setdefault("variable", ["SMB", "ZN6", "ZN4", "ZN5"])
-            ds = MAR.open_mfdataset(self.model_file, **kwargs)
-            # calculate derived fields
-            ds["zaccum"] = ds["zsurf"] - ds["zfirn"] - ds["zmelt"]
-            ds["zsmb"] = ds["zsurf"] - ds["zfirn"]
-            # update attributes for derived fields
-            for key in ("zaccum", "zsmb"):
-                ds[key].attrs.update(_attributes[key])
-            ds["zaccum"].attrs["group"] = ["ZN6", "ZN4", "ZN5"]
-            ds["zsmb"].attrs["group"] = ["ZN6", "ZN4"]
+            ds = MAR.open_mfdataset(model_file, **kwargs)
+            # calculate derived fields (if available)
+            if all(v in kwargs["variable"] for v in ["ZN6", "ZN4"]):
+                ds["zsmb"] = ds["zsurf"] - ds["zfirn"]
+                ds["zsmb"].attrs.update(_attributes["zsmb"])
+                ds["zsmb"].attrs["group"] = ["ZN6", "ZN4"]
+            if all(v in kwargs["variable"] for v in ["ZN6", "ZN4", "ZN5"]):
+                ds["zaccum"] = ds["zsurf"] - ds["zfirn"] - ds["zmelt"]
+                ds["zaccum"].attrs.update(_attributes["zaccum"])
+                ds["zaccum"].attrs["group"] = ["ZN6", "ZN4", "ZN5"]
         elif self.engine == "RACMO":
             # open RACMO file(s) as xarray Dataset
-            kwargs.setdefault("variable", ["hgtsrf"])
             ds = RACMO.open_mfdataset(
-                self.model_file,
+                model_file,
                 format=self.file_format,
                 **kwargs,
             )
@@ -455,6 +486,40 @@ class model:
             ds = ds.smb.to_default_units()
         # return xarray dataset
         return ds
+
+    def open_datatree(
+        self,
+        group: tuple = ("ais", "gris"),
+        **kwargs,
+    ):
+        """
+        Open model files as an xarray DataTree
+
+        Parameters
+        ----------
+        group: tuple, default ('ais', 'gris')
+            List of model types to extract
+        kwargs: dict
+            Additional keyword arguments for opening model files
+
+        Returns
+        -------
+        dtree: xr.DataTree
+            SMB and firn model data
+        """
+        # output dictionary of xarray Datasets
+        ds = {}
+        # try to read model files
+        for g in group:
+            # skip if model group is unavailable
+            if not hasattr(self, g.lower()):
+                continue
+            # open xarray Dataset
+            ds[g] = self.open_dataset(group=g, **kwargs)
+        # create xarray DataTree from dictionary
+        dtree = xr.DataTree.from_dict(ds)
+        # return the model xarray DataTree
+        return dtree
 
     def __str__(self):
         """String representation of the ``io.model`` object"""
@@ -471,14 +536,30 @@ class model:
         """HTML representation of the ``io.model`` object"""
         header = "FirnCorr.io.model"
         header_components = [f"<div class='xr-obj-type'>{header}</div>"]
-        attr_section = xr.core.formatting_html.attr_section(self.__parameters__)
+        sections = []
+        data_vars = self.__variables__.copy()
+        parameters = {
+            k: v for k, v in self.__parameters__.items() if k not in data_vars
+        }
+        sections.append(xr.core.formatting_html.attr_section(parameters))
+        for v in data_vars:
+            sections.append(
+                xr.core.formatting_html._mapping_section(
+                    mapping=self.__parameters__[v],
+                    name=f"{v}-Attributes",
+                    details_func=xr.core.formatting_html.summarize_attrs,
+                    max_items_collapse=0,
+                    expand_option_name="display_expand_attrs",
+                )
+            )
         return xr.core.formatting_html._obj_repr(
-            self,
-            header_components,
-            [
-                attr_section,
-            ],
+            self, header_components, sections
         )
+
+    @property
+    def __variables__(self):
+        """List of model variables"""
+        return [k for k in ("ais", "gris") if k in self.__parameters__]
 
     def get(self, key, default=None):
         return getattr(self, key, default) or default

@@ -111,6 +111,45 @@ def main():
 
     # MAR data variables of interest
     default_variables = ["SMB", "ZN4", "ZN5", "ZN6"]
+    # MAR references for each region
+    references = {}
+    references["Antarctica"] = "https://doi.org/10.5194/tc-12-3827-2018"
+    references["Greenland"] = "https://doi.org/10.5194/tc-14-1209-2020"
+
+    # PROJ4 parameters for MAR model projections
+    proj4_params = dict()
+    # Greenland: Polar Stereographic (Oblique)
+    # Earth Radius: 6371229 m
+    # True Latitude: 0
+    # Center Longitude: -40
+    # Center Latitude: 70.5
+    # Coordinate Axis Units: km
+    proj4_params["Greenland"] = {
+        "proj": "sterea",
+        "lat_0": 70.5,
+        "lat_ts": 0,
+        "lon_0": -40,
+        "k": 1,
+        "x_0": 0,
+        "y_0": 0,
+        "R": 6371229,
+        "units": "km",
+        "no_defs": None,
+        "type": "crs",
+    }
+    # Antarctica: WGS84 / Polar Stereographic
+    # Modification of EPSG:3031
+    # Coordinate Axis Units: km
+    proj4_params["Antarctica"] = {
+        "proj": "stere",
+        "lat_0": -90,
+        "lat_ts": -71,
+        "lon_0": 0,
+        "datum": "WGS84",
+        "units": "km",
+        "no_defs": None,
+        "type": "crs",
+    }
 
     # create output dictionary
     output = {}
@@ -120,9 +159,8 @@ def main():
             if args.verbose:
                 print(f"Processing {model_version} in {model_region}")
             subdirectory = subdirectories[model_region][model_version]
-            # get ftp subdirectory for model version
+            # regular expression pattern for extracting model versions
             match_object = re.match(r"((MARv\d+\.\d+)(.\d+)?)", model_version)
-            # check if model version is in ftp path
             local_version = match_object.group(0)
             short_version = match_object.group(2)
             # full path for local files
@@ -175,10 +213,25 @@ def main():
                 output[model_version][region] = {}
             else:
                 output[model_version] = {region: {}}
+            # regular expression pattern for extracting parameters
+            pattern = r"MAR(v\d+\.\d+(.\d+)?)(\-(.*?))?(\-(.*?))?$"
+            match_object = re.match(pattern, model_version)
+            match_groups = match_object.groups()
+            # model reference and coordinate reference system
+            reference = references[model_region]
+            projection = proj4_params[model_region]
             # append to output dictionary
             output[model_version][region]["model_file"] = sorted(model_files)
             output[model_version][region]["variables"] = variables
-            output[model_version][region]["format"] = "MAR"
+            output[model_version][region]["reference"] = reference
+            output[model_version][region]["projection"] = projection
+            output[model_version]["format"] = "MAR"
+            output[model_version]["name"] = local_version
+            output[model_version]["version"] = match_groups[0]
+            if match_groups[3] is not None:
+                output[model_version]["reanalysis"] = match_groups[3]
+            if match_groups[5] is not None:
+                output[model_version]["resolution"] = match_groups[5]
 
     # writing model parameters to JSON database file
     json_file = filepath.joinpath("MAR.json")
