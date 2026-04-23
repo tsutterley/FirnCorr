@@ -467,7 +467,7 @@ class Dataset:
             if other[v].ndim == 0:
                 # single point extrapolation
                 p_out = _to_cartesian(
-                    other.x.valueFirnCorrs,
+                    other.x.values,
                     other.y.values,
                     is_geographic=self.crs.is_geographic,
                 )
@@ -779,7 +779,7 @@ class Dataset:
         ds = self._ds.copy()
         # convert each variable in the dataset
         for k in ds.data_vars.keys():
-            ds[k] = ds[k].smb.to_units(units, value=value)
+            ds[k] = ds[k].fcorr.to_units(units, value=value)
         # return the dataset
         return ds
 
@@ -789,7 +789,7 @@ class Dataset:
         ds = self._ds.copy()
         # convert each variable in the dataset
         for k in ds.data_vars.keys():
-            ds[k] = ds[k].smb.to_base_units()
+            ds[k] = ds[k].fcorr.to_base_units()
         # return the dataset
         return ds
 
@@ -799,7 +799,7 @@ class Dataset:
         ds = self._ds.copy()
         # convert each variable in the dataset
         for k in ds.data_vars.keys():
-            ds[k] = ds[k].smb.to_default_units()
+            ds[k] = ds[k].fcorr.to_default_units()
         # return the dataset
         return ds
 
