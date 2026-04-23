@@ -464,11 +464,11 @@ class model:
             # calculate derived fields (if available)
             if all(v in kwargs["variables"] for v in ["ZN6", "ZN4"]):
                 ds["zsmb"] = ds["zsurf"] - ds["zfirn"]
-                ds["zsmb"].attrs.update(_attributes[key])
+                ds["zsmb"].attrs.update(_attributes["zsmb"])
                 ds["zsmb"].attrs["group"] = ["ZN6", "ZN4"]
             if all(v in kwargs["variables"] for v in ["ZN6", "ZN4", "ZN5"]):
                 ds["zaccum"] = ds["zsurf"] - ds["zfirn"] - ds["zmelt"]
-                ds["zaccum"].attrs.update(_attributes[key])
+                ds["zaccum"].attrs.update(_attributes["zaccum"])
                 ds["zaccum"].attrs["group"] = ["ZN6", "ZN4", "ZN5"]
         elif self.engine == "RACMO":
             # open RACMO file(s) as xarray Dataset
