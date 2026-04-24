@@ -107,7 +107,15 @@ __all__ = [
     "_s3_buckets",
     "_s3_endpoints",
     "_s3_providers",
+    "attempt_login",
     "build_opener",
+    "get_token",
+    "list_tokens",
+    "revoke_token",
+    "s3_region",
+    "s3_client",
+    "s3_bucket",
+    "s3_key",
     "check_credentials",
     "gesdisc_list",
     "cmr_filter_json",
@@ -1425,6 +1433,11 @@ def build_opener(
         Add base64 encoded authorization header to opener
     urs: str, default 'https://urs.earthdata.nasa.gov'
         Earthdata login URS 3 host
+
+    Returns
+    -------
+    opener: object
+        ``OpenerDirector`` instance
     """
     # https://docs.python.org/3/howto/urllib2.html#id5
     handler = []
