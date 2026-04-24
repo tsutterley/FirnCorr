@@ -26,7 +26,6 @@ import logging
 import pathlib
 import argparse
 import traceback
-import posixpath
 import multiprocessing
 import FirnCorr.utilities
 
@@ -68,9 +67,11 @@ def fetch_mar(
     # standard output (terminal output)
     logging.basicConfig(level=logging.INFO)
 
-    # check if local directory exists and recursively create if not
+    # directory setup
     directory = pathlib.Path(directory).expanduser().absolute()
-    directory.mkdir(exist_ok=True, parents=True, mode=mode)
+    # check if local directory exists and recursively create if not
+    local_directory = directory.joinpath("MAR")
+    local_directory.mkdir(exist_ok=True, parents=True, mode=mode)
 
     # regular expression for finding years in file names
     R1 = r"\d+" if not years else r"|".join(map(str, years))
@@ -106,7 +107,7 @@ def fetch_mar(
         # download remote MAR files to local directory
         for colname, collastmod in zip(remote_files, remote_times):
             remote_path = URL.joinpath(colname)
-            local_file = directory.joinpath(colname)
+            local_file = local_directory.joinpath(colname)
             out.append(
                 pool.apply_async(
                     _multiprocess,
@@ -129,7 +130,7 @@ def fetch_mar(
         kwds = dict(timeout=timeout, clobber=clobber, mode=mode)
         for colname, collastmod in zip(remote_files, remote_times):
             remote_path = URL.joinpath(colname)
-            local_file = directory.joinpath(colname)
+            local_file = local_directory.joinpath(colname)
             output = _download(remote_path, collastmod, local_file, **kwds)
             logging.info(output) if output else None
 
@@ -175,34 +176,26 @@ def _download(
     """
     # check if local version of file exists
     if kwargs["clobber"]:
-        why = " (overwrite)"
+        why = "overwrite"
     elif not local.exists():
-        why = " (new)"
+        why = "new"
     elif local.exists() and _newer(mtime, local.stat().st_mtime):
         return
     else:
-        why = " (old)"
+        why = "old"
     # if file does not exist locally, is to be overwritten, or clobber is set
     # output string for printing files transferred
-    output = f"{URL} -->\n\t{local}{why}\n"
+    output = f"\n\tremote={URL} -->\n\tlocal={local}\n\treason={why}"
     # copy remote file contents to local file
-    if URL.scheme.startswith("ftp"):
-        FirnCorr.utilities.from_ftp(
-            URL.parts,
-            timeout=kwargs["timeout"],
-            local=local,
-            hash=FirnCorr.utilities.get_hash(local),
-        )
-    elif URL.scheme.startswith("http"):
-        URL.get(
-            timeout=kwargs["timeout"],
-            local=local,
-            hash=FirnCorr.utilities.get_hash(local),
-        )
-
+    URL.get(
+        timeout=kwargs["timeout"],
+        local=local,
+        hash=FirnCorr.utilities.get_hash(local),
+        label=output,
+        mode=kwargs["mode"],
+    )
     # keep remote modification time of file and local access time
     os.utime(local, (local.stat().st_atime, mtime))
-    local.chmod(mode=kwargs["mode"])
     # return the output string
     return output
 

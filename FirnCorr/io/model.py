@@ -483,7 +483,7 @@ class model:
         self.projection = ds.attrs.get("crs", self.crs.to_dict())
         # convert to default units
         if kwargs["use_default_units"]:
-            ds = ds.smb.to_default_units()
+            ds = ds.fcorr.to_default_units()
         # return xarray dataset
         return ds
 

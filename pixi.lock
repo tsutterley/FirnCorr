@@ -5309,7 +5309,7 @@ packages:
 - pypi: ./
   name: firncorr
   version: 0.0.1
-  sha256: f5d23f75b3c81312f613fdbaca235dbbdb5f4e5d01e6c0ec670576d02da10c39
+  sha256: f33579b4ee19d9da27112177c628efda3b58cf70a85c90998c6f0c3ff9cc911a
   requires_dist:
   - h5netcdf
   - lxml
