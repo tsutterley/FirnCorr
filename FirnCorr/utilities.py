@@ -17,6 +17,7 @@ UPDATE HISTORY:
         allow additional keyword arguments to http functions
         added get_cache_path function for application cache directories
         add MAR list function for parsing their http server directories
+        add NASA Earthdata credential utilities and AWS s3 functions
     Updated 09/2024: add wrapper to importlib for optional dependencies
     Updated 06/2022: add NASA Common Metadata Repository (CMR) queries
         added function to build GES DISC subsetting API requests
@@ -48,10 +49,12 @@ import ftplib
 import shutil
 import base64
 import socket
+import getpass
 import inspect
 import hashlib
 import logging
 import pathlib
+import builtins
 import warnings
 import importlib
 import posixpath
@@ -70,6 +73,47 @@ else:
     from urllib.parse import urlencode, quote_plus, urlparse
     from http.cookiejar import CookieJar
     import urllib.request as urllib2
+
+
+__all__ = [
+    "reify",
+    "get_data_path",
+    "get_cache_path",
+    "import_dependency",
+    "dependency_available",
+    "is_valid_url",
+    "Path",
+    "URL",
+    "detect_compression",
+    "compressuser",
+    "get_hash",
+    "url_split",
+    "convert_arg_line_to_args",
+    "get_unix_time",
+    "isoformat",
+    "even",
+    "copy",
+    "check_ftp_connection",
+    "ftp_list",
+    "from_ftp",
+    "_create_default_ssl_context",
+    "_create_ssl_context_no_verify",
+    "_set_ssl_context_options",
+    "check_connection",
+    "http_list",
+    "from_http",
+    "from_json",
+    "mar_list",
+    "_s3_buckets",
+    "_s3_endpoints",
+    "_s3_providers",
+    "build_opener",
+    "check_credentials",
+    "gesdisc_list",
+    "cmr_filter_json",
+    "cmr",
+    "build_request",
+]
 
 
 class reify(object):
@@ -292,7 +336,15 @@ class URL:
 
     def get(self, *args, **kwargs):
         """Get contents from URL"""
-        return from_http(self.urlname, headers=self._headers, *args, **kwargs)
+        if self.scheme.startswith("ftp"):
+            host = [self.netloc, *url_split(self.path)]
+            return from_ftp(host, *args, **kwargs)
+        elif self.scheme.startswith("http"):
+            return from_http(
+                self.urlname, *args, headers=self._headers, **kwargs
+            )
+        else:
+            raise NotImplementedError(f"Unsupported scheme: {self.scheme}")
 
     def headers(self, *args, **kwargs):
         """Get headers from URL"""
@@ -303,17 +355,21 @@ class URL:
         """Load ``JSON`` response from URL"""
         return from_json(self.urlname, headers=self._headers, *args, **kwargs)
 
-    def query(self, *args, **kwargs):
-        """List contents from URL"""
-        return http_list(self.urlname, headers=self._headers, *args, **kwargs)
-
     def ping(self, *args, **kwargs) -> bool:
         """Ping URL to check connection"""
         return check_connection(self.urlname, *args, **kwargs)
 
+    def query(self, *args, **kwargs):
+        """List contents from URL"""
+        return http_list(self.urlname, headers=self._headers, *args, **kwargs)
+
     def read(self, *args, **kwargs):
         """Open URL and read response"""
         return self.urlopen(*args, **kwargs).read()
+
+    def request(self, *args, **kwargs):
+        """Make URL request"""
+        return urllib2.Request(self.urlname)
 
     def urlopen(self, *args, **kwargs):
         """Open URL and return response"""
@@ -358,6 +414,18 @@ class URL:
         return self._components.path
 
     @property
+    def s3bucket(self):
+        """AWS s3 bucket name"""
+        if self.scheme.startswith("s3"):
+            return s3_bucket(self.geturl())
+
+    @property
+    def s3key(self):
+        """AWS s3 key"""
+        if self.scheme.startswith("s3"):
+            return s3_key(self.geturl())
+
+    @property
     def scheme(self):
         """URL scheme"""
         return self._components.scheme + "://"
@@ -381,6 +449,10 @@ class URL:
     def __str__(self):
         """String representation of the ``URL`` object"""
         return str(self.urlname)
+
+    def __add__(self, other):
+        """Concatenate URL components using the addition operator"""
+        return URL(self.urlname + str(other))
 
     def __div__(self, other):
         """Join URL components using the division operator"""
@@ -731,8 +803,10 @@ def from_ftp(
     hash: str = "",
     chunk: int = 8192,
     verbose: bool = False,
-    fid=sys.stdout,
+    fid: object = sys.stdout,
+    label: str | None = None,
     mode: oct = 0o775,
+    **kwargs,
 ):
     """
     Download a file from a ``ftp`` host
@@ -755,8 +829,10 @@ def from_ftp(
         Chunk size for transfer encoding
     verbose: bool, default False
         Print file transfer information
-    fid: obj, default sys.stdout
-        Open file object to print if verbose
+    fid: object, default sys.stdout
+        Open file object for logging file transfers if verbose
+    label: str, default None
+        Label for logging file transfer information if verbose
     mode: oct, default 0o775
         Permissions mode of output local file
 
@@ -771,6 +847,9 @@ def from_ftp(
     # verify inputs for remote ftp host
     if isinstance(HOST, str):
         HOST = url_split(HOST)
+    # set default label for logging
+    if label is None:
+        label = f"{posixpath.join(*HOST)} -->\n\t{local}"
     # try downloading from ftp
     try:
         # try to connect to ftp host
@@ -801,8 +880,7 @@ def from_ftp(
             # create directory if non-existent
             local.parent.mkdir(mode=mode, parents=True, exist_ok=True)
             # print file information
-            args = (posixpath.join(*HOST), str(local))
-            logging.info("{0} -->\n\t{1}".format(*args))
+            logging.info(label)
             # store bytes to file using chunked transfer encoding
             remote_buffer.seek(0)
             with local.open(mode="wb") as f:
@@ -969,7 +1047,8 @@ def from_http(
     chunk: int = 16384,
     headers: dict = {},
     verbose: bool = False,
-    fid=sys.stdout,
+    fid: object = sys.stdout,
+    label: str | None = None,
     mode: oct = 0o775,
     **kwargs,
 ):
@@ -994,8 +1073,10 @@ def from_http(
         Dictionary of headers to append from URL request
     verbose: bool, default False
         Print file transfer information
-    fid: obj, default sys.stdout
-        Open file object to print if verbose
+    fid: object, default sys.stdout
+        Open file object for logging file transfers if verbose
+    label: str or None, default None
+        Label for logging file transfer information if verbose
     mode: oct, default 0o775
         Permissions mode of output local file
 
@@ -1010,6 +1091,9 @@ def from_http(
     # verify inputs for remote http host
     if isinstance(HOST, str):
         HOST = url_split(HOST)
+    # set default label for logging
+    if label is None:
+        label = f"{posixpath.join(*HOST)} -->\n\t{local}"
     # try downloading from http
     try:
         # Create and submit request.
@@ -1040,8 +1124,7 @@ def from_http(
             # create directory if non-existent
             local.parent.mkdir(mode=mode, parents=True, exist_ok=True)
             # print file information
-            args = (posixpath.join(*HOST), str(local))
-            logging.info("{0} -->\n\t{1}".format(*args))
+            logging.info(label)
             # store bytes to file using chunked transfer encoding
             remote_buffer.seek(0)
             with local.open(mode="wb") as f:
@@ -1182,6 +1265,134 @@ def mar_list(
         return colnames, collastmod
 
 
+# NASA Cumulus AWS S3 buckets
+_s3_buckets = {
+    "gesdisc": "gesdisc-cumulus-prod-protected",
+    "ghrcdaac": "ghrc-cumulus-dev",
+    "lpdaac": "lp-prod-protected",
+    "nsidc": "nsidc-cumulus-prod-protected",
+    "ornldaac": "ornl-cumulus-prod-protected",
+    "podaac": "podaac-ops-cumulus-protected",
+    "podaac-doc": "podaac-ops-cumulus-docs",
+}
+
+# NASA Cumulus AWS S3 credential endpoints
+_s3_endpoints = {
+    "gesdisc": "https://data.gesdisc.earthdata.nasa.gov/s3credentials",
+    "ghrcdaac": "https://data.ghrc.earthdata.nasa.gov/s3credentials",
+    "lpdaac": "https://data.lpdaac.earthdatacloud.nasa.gov/s3credentials",
+    "nsidc": "https://data.nsidc.earthdatacloud.nasa.gov/s3credentials",
+    "ornldaac": "https://data.ornldaac.earthdata.nasa.gov/s3credentials",
+    "podaac": "https://archive.podaac.earthdata.nasa.gov/s3credentials",
+}
+
+# NASA Cumulus AWS providers
+_s3_providers = {
+    "gesdisc": "GES_DISC",
+    "ghrcdaac": "GHRC_DAAC",
+    "lpdaac": "LPCLOUD",
+    "nsidc": "NSIDC_CPRD",
+    "ornldaac": "ORNL_CLOUD",
+    "podaac": "POCLOUD",
+}
+
+
+# PURPOSE: attempt to build an opener with netrc
+def attempt_login(
+    urs: str,
+    context: ssl.SSLContext = _default_ssl_context,
+    password_manager: bool = True,
+    get_ca_certs: bool = False,
+    redirect: bool = False,
+    authorization_header: bool = True,
+    **kwargs,
+):
+    """
+    Attempt to build a ``urllib`` opener for NASA Earthdata
+
+    Parameters
+    ----------
+    urs: str
+        Earthdata login URS 3 host
+    context: obj, default FirnCorr.utilities._default_ssl_context
+        SSL context for ``urllib`` opener object
+    password_manager: bool, default True
+        Create password manager context using default realm
+    get_ca_certs: bool, default False
+        Get list of loaded “certification authority” certificates
+    redirect: bool, default False
+        Create redirect handler object
+    authorization_header: bool, default True
+        Add base64 encoded authorization header to opener
+    username: str, default from environmental variable
+        NASA Earthdata username
+    password: str, default from environmental variable
+        NASA Earthdata password
+    endpoint: str, default from _s3_endpoints
+        NASA Cumulus AWS S3 credential endpoint for a provider
+    retries: int, default 5
+        number of retry attempts
+    netrc: str, default ~/.netrc
+        path to .netrc file for authentication
+
+    Returns
+    -------
+    opener: obj
+        OpenerDirector instance
+    """
+    # set default keyword arguments
+    kwargs.setdefault("username", os.environ.get("EARTHDATA_USERNAME"))
+    kwargs.setdefault("password", os.environ.get("EARTHDATA_PASSWORD"))
+    kwargs.setdefault("endpoint", _s3_endpoints["gesdisc"])
+    kwargs.setdefault("retries", 5)
+    kwargs.setdefault("netrc", pathlib.Path.home().joinpath(".netrc"))
+    try:
+        # verify permissions level of netrc file
+        # only necessary on jupyterhub
+        nc = pathlib.Path(kwargs["netrc"]).expanduser().absolute()
+        nc.chmod(mode=0o600)
+        # try retrieving credentials from netrc
+        username, _, password = netrc.netrc(nc).authenticators(urs)
+    except Exception as exc:
+        # try retrieving credentials from environmental variables
+        username, password = (kwargs["username"], kwargs["password"])
+        pass
+    # manual input for username if not available
+    if not username:
+        username = builtins.input(f"Username for {urs}: ")
+    # manual input for password if not available
+    prompt = f"Password for {username}@{urs}: "
+    if not password:
+        password = getpass.getpass(prompt=prompt)
+    # host for endpoint
+    HOST = kwargs.get("endpoint")
+    # for each retry
+    for retry in range(kwargs["retries"]):
+        # build an opener for urs with credentials
+        opener = build_opener(
+            username,
+            password,
+            context=context,
+            password_manager=password_manager,
+            get_ca_certs=get_ca_certs,
+            redirect=redirect,
+            authorization_header=authorization_header,
+            urs=urs,
+        )
+        # try logging in by check credentials
+        try:
+            check_credentials(HOST)
+        except Exception as exc:
+            pass
+        else:
+            return opener
+        # reattempt login
+        username = builtins.input(f"Username for {urs}: ")
+        password = getpass.getpass(prompt=prompt)
+    # reached end of available retries
+    raise RuntimeError("End of Retries: Check NASA Earthdata credentials")
+
+
 # PURPOSE: "login" to NASA Earthdata with supplied credentials
 def build_opener(
     username: str,
@@ -1250,6 +1461,298 @@ def build_opener(
     return opener
 
 
+# PURPOSE: generate a NASA Earthdata user token
+def get_token(
+    HOST: str = "https://urs.earthdata.nasa.gov/api/users/token",
+    username: str | None = None,
+    password: str | None = None,
+    build: bool = True,
+    context: ssl.SSLContext = _default_ssl_context,
+    urs: str = "urs.earthdata.nasa.gov",
+):
+    """
+    Generate a NASA Earthdata User Token
+
+    Parameters
+    ----------
+    HOST: str or list
+        NASA Earthdata token API host
+    username: str or NoneType, default None
+        NASA Earthdata username
+    password: str or NoneType, default None
+        NASA Earthdata password
+    build: bool, default True
+        Build opener and check credentials
+    timeout: int or NoneType, default None
+        timeout in seconds for blocking operations
+    context: obj, default FirnCorr.utilities._default_ssl_context
+        SSL context for ``urllib`` opener object
+    urs: str, default 'urs.earthdata.nasa.gov'
+        NASA Earthdata URS 3 host
+
+    Returns
+    -------
+    token: dict
+        JSON response with NASA Earthdata User Token
+    """
+    # attempt to build urllib2 opener and check credentials
+    if build:
+        attempt_login(
+            urs,
+            username=username,
+            password=password,
+            context=context,
+            password_manager=False,
+            get_ca_certs=False,
+            redirect=False,
+            authorization_header=True,
+        )
+    # create post response with Earthdata token API
+    try:
+        request = urllib2.Request(HOST, method="POST")
+        response = urllib2.urlopen(request)
+    except urllib2.HTTPError as exc:
+        logging.debug(exc.code)
+        raise RuntimeError(exc.reason) from exc
+    except urllib2.URLError as exc:
+        logging.debug(exc.reason)
+        raise RuntimeError("Check internet connection") from exc
+    # read and return JSON response
+    return json.loads(response.read())
+
+
+# PURPOSE: generate a NASA Earthdata user token
+def list_tokens(
+    HOST: str = "https://urs.earthdata.nasa.gov/api/users/tokens",
+    username: str | None = None,
+    password: str | None = None,
+    build: bool = True,
+    context: ssl.SSLContext = _default_ssl_context,
+    urs: str = "urs.earthdata.nasa.gov",
+):
+    """
+    List the current associated NASA Earthdata User Tokens
+
+    Parameters
+    ----------
+    HOST: str
+        NASA Earthdata list token API host
+    username: str or NoneType, default None
+        NASA Earthdata username
+    password: str or NoneType, default None
+        NASA Earthdata password
+    build: bool, default True
+        Build opener and check credentials
+    timeout: int or NoneType, default None
+        timeout in seconds for blocking operations
+    context: obj, default FirnCorr.utilities._default_ssl_context
+        SSL context for ``urllib`` opener object
+    urs: str, default 'urs.earthdata.nasa.gov'
+        NASA Earthdata URS 3 host
+
+    Returns
+    -------
+    tokens: list
+        JSON response with NASA Earthdata User Tokens
+    """
+    # attempt to build urllib2 opener and check credentials
+    if build:
+        attempt_login(
+            urs,
+            username=username,
+            password=password,
+            context=context,
+            password_manager=False,
+            get_ca_certs=False,
+            redirect=False,
+            authorization_header=True,
+        )
+    # create get response with Earthdata list tokens API
+    try:
+        request = urllib2.Request(HOST)
+        response = urllib2.urlopen(request)
+    except urllib2.HTTPError as exc:
+        logging.debug(exc.code)
+        raise RuntimeError(exc.reason) from exc
+    except urllib2.URLError as exc:
+        logging.debug(exc.reason)
+        raise RuntimeError("Check internet connection") from exc
+    # read and return JSON response
+    return json.loads(response.read())
+
+
+# PURPOSE: revoke a NASA Earthdata user token
+def revoke_token(
+    token: str,
+    HOST: str = f"https://urs.earthdata.nasa.gov/api/users/revoke_token",
+    username: str | None = None,
+    password: str | None = None,
+    build: bool = True,
+    context: ssl.SSLContext = _default_ssl_context,
+    urs: str = "urs.earthdata.nasa.gov",
+):
+    """
+    Generate a NASA Earthdata User Token
+
+    Parameters
+    ----------
+    token: str
+        NASA Earthdata token to be revoked
+    HOST: str
+        NASA Earthdata revoke token API host
+    username: str or NoneType, default None
+        NASA Earthdata username
+    password: str or NoneType, default None
+        NASA Earthdata password
+    build: bool, default True
+        Build opener and check credentials
+    timeout: int or NoneType, default None
+        timeout in seconds for blocking operations
+    context: obj, default FirnCorr.utilities._default_ssl_context
+        SSL context for ``urllib`` opener object
+    urs: str, default 'urs.earthdata.nasa.gov'
+        NASA Earthdata URS 3 host
+    """
+    # attempt to build urllib2 opener and check credentials
+    if build:
+        attempt_login(
+            urs,
+            username=username,
+            password=password,
+            context=context,
+            password_manager=False,
+            get_ca_certs=False,
+            redirect=False,
+            authorization_header=True,
+        )
+    # full path for NASA Earthdata revoke token API
+    url = f"{HOST}?token={token}"
+    # create post response with Earthdata revoke tokens API
+    try:
+        request = urllib2.Request(url, method="POST")
+        response = urllib2.urlopen(request)
+    except urllib2.HTTPError as exc:
+        logging.debug(exc.code)
+        raise RuntimeError(exc.reason) from exc
+    except urllib2.URLError as exc:
+        logging.debug(exc.reason)
+        raise RuntimeError("Check internet connection") from exc
+    # verbose response
+    logging.debug(f"Token Revoked: {token}")
+
+
+def s3_region():
+    """
+    Get AWS s3 region for EC2 instance
+
+    Returns
+    -------
+    region_name: str
+        AWS region name
+    """
+    boto3 = import_dependency("boto3")
+    region_name = boto3.session.Session().region_name
+    return region_name
+
+
+# PURPOSE: get AWS s3 client for GES DISC
+def s3_client(
+    HOST: str = _s3_endpoints["gesdisc"],
+    timeout: int | None = None,
+    region_name: str = "us-west-2",
+):
+    """
+    Get AWS s3 client for NASA Earthdata
+
+    Parameters
+    ----------
+    HOST: str
+        S3 credential host
+    timeout: int or NoneType, default None
+        timeout in seconds for blocking operations
+    region_name: str, default 'us-west-2'
+        AWS region name
+
+    Returns
+    -------
+    client: obj
+        AWS s3 client
+    """
+    request = urllib2.Request(HOST)
+    response = urllib2.urlopen(request, timeout=timeout)
+    cumulus = json.loads(response.read())
+    # get AWS client object
+    boto3 = import_dependency("boto3")
+    client = boto3.client(
+        "s3",
+        aws_access_key_id=cumulus["accessKeyId"],
+        aws_secret_access_key=cumulus["secretAccessKey"],
+        aws_session_token=cumulus["sessionToken"],
+        region_name=region_name,
+    )
+    # return the AWS client for region
+    return client
+
+
+# PURPOSE: get a s3 bucket name from a presigned url
+def s3_bucket(presigned_url: str) -> str:
+    """
+    Get a s3 bucket name from a presigned url
+
+    Parameters
+    ----------
+    presigned_url: str
+        s3 presigned url
+
+    Returns
+    -------
+    bucket: str
+        s3 bucket name
+    """
+    host = url_split(presigned_url)
+    bucket = re.sub(r"s3:\/\/", r"", host[0], re.IGNORECASE)
+    return bucket
+
+
+# PURPOSE: get a s3 bucket key from a presigned url
+def s3_key(presigned_url: str) -> str:
+    """
+    Get a s3 bucket key from a presigned url
+
+    Parameters
+    ----------
+    presigned_url: str
+        s3 presigned url
+
+    Returns
+    -------
+    key: str
+        s3 bucket key for object
+    """
+    host = url_split(presigned_url)
+    key = posixpath.join(*host[1:])
+    return key
+
+
+# PURPOSE: check that entered NASA Earthdata credentials are valid
+def check_credentials(HOST: str = _s3_endpoints["gesdisc"]):
+    """
+    Check that entered NASA Earthdata credentials are valid
+
+    HOST: str
+        full url to protected credential website
+    """
+    try:
+        request = urllib2.Request(HOST)
+        response = urllib2.urlopen(request, timeout=20)
+    except urllib2.HTTPError:
+        raise RuntimeError("Check your NASA Earthdata credentials")
+    except urllib2.URLError:
+        raise RuntimeError("Check internet connection")
+    else:
+        return True
+
+
 # PURPOSE: list a directory on NASA GES DISC https server
 def gesdisc_list(
     HOST: str | list,
@@ -1258,7 +1761,6 @@ def gesdisc_list(
     build: bool = False,
     timeout: int | None = None,
     urs: str = "urs.earthdata.nasa.gov",
-    context: ssl.SSLContext = _default_ssl_context,
     parser=lxml.etree.HTMLParser(),
     format: str = r"%Y-%m-%d %H:%M",
     pattern: str = "",
@@ -1279,8 +1781,6 @@ def gesdisc_list(
         Build opener with NASA Earthdata credentials
     timeout: int or NoneType, default None
         Timeout in seconds for blocking operations
-    context: obj, default FirnCorr.utilities._default_ssl_context
-        ``SSL`` context for ``urllib`` opener object
     parser: obj, default lxml.etree.HTMLParser()
         ``HTML`` parser for ``lxml``
     format: str, default '%Y-%m-%d %H:%M'
@@ -1387,7 +1887,7 @@ def cmr_filter_json(
     if ("feed" not in search_results) or (
         "entry" not in search_results["feed"]
     ):
-        return (granule_names, granule_urls)
+        return (granule_names, granule_urls, granule_mtimes)
     # descriptor links for each endpoint
     rel = {}
     rel["data"] = "http://esipfed.org/ns/fedsearch/1.1/data#"
@@ -1417,7 +1917,7 @@ def cmr_filter_json(
     return (granule_names, granule_urls, granule_mtimes)
 
 
-# PURPOSE: cmr queries for GRACE/GRACE-FO products
+# PURPOSE: query the NASA Common Metadata Repository (CMR)
 def cmr(
     short_name: str,
     version: str | None = None,
@@ -1425,7 +1925,7 @@ def cmr(
     end_date: str | None = None,
     provider: str = "GES_DISC",
     endpoint: str = "data",
-    request_type: str = "application/x-netcdf",
+    request_type: str = r"application/x-netcdf",
     verbose: bool = False,
     fid: object = sys.stdout,
 ):
@@ -1459,8 +1959,8 @@ def cmr(
         data type for reducing CMR query
     verbose: bool, default False
         print CMR query information
-    fid: obj, default sys.stdout
-        open file object to print if verbose
+    fid: object, default sys.stdout
+        Open file object for logging CMR URL if verbose
 
     Returns
     -------
@@ -1493,41 +1993,45 @@ def cmr(
     ]
     # build list of CMR query parameters
     CMR_KEYS = []
-    CMR_KEYS.append("?provider={0}".format(provider))
+    CMR_KEYS.append(f"?provider={provider}")
     CMR_KEYS.append("&sort_key[]=start_date")
     CMR_KEYS.append("&sort_key[]=producer_granule_id")
-    CMR_KEYS.append("&page_size={0}".format(cmr_page_size))
+    CMR_KEYS.append(f"&page_size={cmr_page_size}")
     # dictionary of product shortnames and version
-    CMR_KEYS.append("&short_name={0}".format(short_name))
+    CMR_KEYS.append(f"&short_name={short_name}")
     if version:
-        CMR_KEYS.append("&version={0}".format(version))
+        CMR_KEYS.append(f"&version={version}")
     # append keys for start and end time
     # verify that start and end times are in ISO format
     start_date = isoformat(start_date) if start_date else ""
     end_date = isoformat(end_date) if end_date else ""
-    CMR_KEYS.append("&temporal={0},{1}".format(start_date, end_date))
+    CMR_KEYS.append(f"&temporal={start_date},{end_date}")
     # full CMR query url
-    cmr_query_url = "".join([posixpath.join(*CMR_HOST), *CMR_KEYS])
-    logging.info("CMR request={0}".format(cmr_query_url))
+    cmr_query_url = URL.from_parts(CMR_HOST) + "".join(CMR_KEYS)
+    logging.info(f"CMR request={cmr_query_url}")
     # output list of granule names and urls
     granule_names = []
     granule_urls = []
     granule_mtimes = []
     cmr_search_after = None
     while True:
-        req = urllib2.Request(cmr_query_url)
+        # make CMR query request
+        request = cmr_query_url.request()
         # add CMR search after header
         if cmr_search_after:
-            req.add_header("CMR-Search-After", cmr_search_after)
+            request.add_header("CMR-Search-After", cmr_search_after)
             logging.debug(f"CMR-Search-After: {cmr_search_after}")
-        response = opener.open(req)
+        # submit request and get response
+        response = opener.open(request)
         # get search after index for next iteration
         headers = {k.lower(): v for k, v in dict(response.info()).items()}
         cmr_search_after = headers.get("cmr-search-after")
         # read the CMR search as JSON
         search_page = json.loads(response.read().decode("utf8"))
         ids, urls, mtimes = cmr_filter_json(
-            search_page, endpoint=endpoint, request_type=request_type
+            search_page,
+            endpoint=endpoint,
+            request_type=request_type,
         )
         if not urls or cmr_search_after is None:
             break
@@ -1544,6 +2048,7 @@ def build_request(
     short_name: str,
     dataset_version: str,
     url: str,
+    host: str | None = None,
     variables: list = [],
     format: str = "bmM0Lw",
     service: str = "L34RS_MERRA2",
@@ -1558,8 +2063,14 @@ def build_request(
     ----------
     short_name: str
         Model shortname in the CMR system
+    dataset_version: str
+        Model version
     url: str
         url for granule returned by the CMR system
+    host: str or NoneType, default None
+        Override host provider for GES DISC subsetting
+
+        Default is host provider given by CMR request
     variables: list, default []
         Variables for product to subset
     format: str, default 'bmM0Lw'
@@ -1580,7 +2091,10 @@ def build_request(
     """
     # split CMR supplied url for granule
     HOST, *args = url_split(url)
-    api_host = posixpath.join(HOST, "daac-bin", "OTF", "HTTP_services.cgi?")
+    if host is None:
+        host = HOST
+    # base URL for GES DISC on-the-fly subsetting API
+    api_host = URL.from_parts([host, "daac-bin", "OTF", "HTTP_services.cgi?"])
     # create parameters to be encoded
     kwargs["FILENAME"] = posixpath.join(posixpath.sep, *args)
     kwargs["FORMAT"] = format
@@ -1589,7 +2103,8 @@ def build_request(
     kwargs["BBOX"] = ",".join(map(str, bbox))
     kwargs["SHORTNAME"] = short_name
     kwargs["DATASET_VERSION"] = dataset_version
-    kwargs["VARIABLES"] = ",".join(variables)
+    if variables is not None:
+        kwargs["VARIABLES"] = ",".join(variables)
     # return the formatted request url
     request_url = api_host + urlencode(kwargs)
     return request_url
