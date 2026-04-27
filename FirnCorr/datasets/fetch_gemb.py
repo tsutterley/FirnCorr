@@ -48,7 +48,7 @@ def fetch_gemb(
     clobber: bool, default False
         Overwrite existing data
     chunk: int, default 16384
-        Chunk size for copying files in bytesy
+        Chunk size for copying files in bytes
     mode: int, default 0o775
         Permission mode of the local directories and files (number in octal)
     """
@@ -86,7 +86,9 @@ def fetch_gemb(
         # full path to output file
         local_file = local_directory.joinpath(f["filename"])
         # check if file already exists by matching MD5 checksums
-        original_md5 = FirnCorr.utilities.get_hash(local_file)
+        original_md5 = FirnCorr.utilities.get_hash(
+            local_file, include_algorithm=True
+        )
         # skip download if checksums match
         if original_md5 == f["checksum"] and not clobber:
             continue
@@ -99,7 +101,9 @@ def fetch_gemb(
             timeout=timeout, context=_default_ssl_context
         )
         # verify MD5 checksums
-        computed_md5 = FirnCorr.utilities.get_hash(remote_buffer)
+        computed_md5 = FirnCorr.utilities.get_hash(
+            remote_buffer, include_algorithm=True
+        )
         # raise exception if checksums do not match
         if computed_md5 != f["checksum"]:
             raise Exception(f"Checksum mismatch: {download.urlname}")
