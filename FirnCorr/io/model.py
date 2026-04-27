@@ -395,6 +395,7 @@ class model:
         """Asserts that the model format is a known type"""
         # assert that model is a known format
         known_formats = []
+        known_formats.append("GEMB")
         known_formats.append("GSFC-fdm")
         known_formats.append("MAR")
         known_formats.append("RACMO-ascii")

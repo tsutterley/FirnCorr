@@ -321,7 +321,11 @@ def arguments():
     )
     # MERRA-2 version
     parser.add_argument(
-        "--version", "-v", type=str, default="5.12.4", help="MERRA-2 version"
+        "--version",
+        "-v",
+        type=str,
+        default="5.12.4",
+        help="MERRA-2 version",
     )
     # years to download
     now = time.gmtime()

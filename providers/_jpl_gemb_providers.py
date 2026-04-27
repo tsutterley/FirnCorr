@@ -14,8 +14,6 @@ import FirnCorr.utilities
 # current file path
 filename = inspect.getframeinfo(inspect.currentframe()).filename
 filepath = pathlib.Path(filename).absolute().parent
-# url encoding function
-urlencode = FirnCorr.utilities.urlencode
 # default ssl context
 _default_ssl_context = FirnCorr.utilities._default_ssl_context
 # repository API urls
@@ -31,7 +29,7 @@ def arguments():
     )
     # command line parameters
     parser.add_argument(
-        "--record", "-R", type=str, default="7130968", help="Zenodo record file"
+        "--record", "-R", type=str, default="7130968", help="Zenodo record"
     )
     parser.add_argument(
         "--pretty", "-p", action="store_true", help="Pretty print the json file"
@@ -72,8 +70,13 @@ def main():
     # for each version of the record
     for hit in version_response["hits"]["hits"]:
         # get version of the record
+        version_id = str(hit["id"])
         # find firn model files
         files = [f for f in hit["files"] if re.search(regex_pattern, f["key"])]
+        # raise error if no files found for version
+        if not files:
+            raise ValueError(f"No files found for record {version_id}")
+        # get model version and region from filename
         for file in files:
             # search for pattern in filename
             match = re.search(regex_pattern, file["key"])
