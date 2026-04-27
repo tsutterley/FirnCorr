@@ -57,7 +57,7 @@ def main():
     # regular expression pattern for extracting parameters
     regex_pattern = (
         r"GEMB_(Greenland|Antarctica)(_and_Periphery)?_"
-        r"FAC_\d{4}_\d{4}_(.*?)mesh_\d+km_(v.*?).nc$"
+        r"FAC_\d{4}_\d{4}_(.*?)(\d+day_)?mesh_\d+km_(v.*?).nc$"
     )
     # short names for regions
     regions = dict(Antarctica="ais", Greenland="gris")
@@ -74,8 +74,8 @@ def main():
         # find firn model files
         files = [f for f in hit["files"] if re.search(regex_pattern, f["key"])]
         # raise error if no files found for version
-        if not files:
-            raise ValueError(f"No files found for record {version_id}")
+        if not files and args.verbose:
+            print(f"No files found for record {version_id}")
         # get model version and region from filename
         for file in files:
             # search for pattern in filename
@@ -84,8 +84,12 @@ def main():
             model_region = match.group(1)
             region = regions[model_region]
             # get model version
-            gemb_version = match.group(4).replace("_", ".")
+            gemb_version = match.group(5).replace("_", ".")
             model_version = f"GEMB-{gemb_version}"
+            # append time resolution to model version if applicable
+            if match.group(4):
+                time_resolution = match.group(4).replace("_", "")
+                model_version += f"-{time_resolution}"
             # build output dictionary for model version and region
             if model_version in output:
                 output[model_version][region] = {}

@@ -66,7 +66,7 @@ def fetch_gemb(
     # regular expression pattern for extracting parameters
     regex_pattern = (
         r"GEMB_(Greenland|Antarctica)(_and_Periphery)?_"
-        r"FAC_\d{4}_\d{4}_(.*?)mesh_\d+km_(v.*?).nc$"
+        r"FAC_\d{4}_\d{4}_(.*?)(\d+day_)?mesh_\d+km_(v.*?).nc$"
     )
     # get files from latest version of record
     version = str(records_response["id"])
@@ -79,6 +79,13 @@ def fetch_gemb(
     for f in deposit_response:
         # search for pattern in filename
         match = re.search(regex_pattern, f["filename"])
+        # check if needing to include algorithm in the hash comparison
+        include_algorithm = re.match(r"md5\:", f["checksum"])
+        # skip file if pattern is not found
+        if not match:
+            logging.debug(f"Skipping file: {f['filename']}")
+            continue
+        # extract parameters from filename
         gemb_version = match.group(4).replace("_", ".")
         # check if local directory exists and recursively create if not
         local_directory = directory.joinpath("GEMB", gemb_version)
@@ -87,7 +94,7 @@ def fetch_gemb(
         local_file = local_directory.joinpath(f["filename"])
         # check if file already exists by matching MD5 checksums
         original_md5 = FirnCorr.utilities.get_hash(
-            local_file, include_algorithm=True
+            local_file, include_algorithm=include_algorithm
         )
         # skip download if checksums match
         if original_md5 == f["checksum"] and not clobber:
@@ -102,28 +109,17 @@ def fetch_gemb(
         )
         # verify MD5 checksums
         computed_md5 = FirnCorr.utilities.get_hash(
-            remote_buffer, include_algorithm=True
+            remote_buffer, include_algorithm=include_algorithm
         )
         # raise exception if checksums do not match
         if computed_md5 != f["checksum"]:
             raise Exception(f"Checksum mismatch: {download.urlname}")
-        # download file or extract files from zip
-        if pathlib.Path(f["filename"]).suffix == ".zip":
-            # extract the zip file into the local directory
-            with zipfile.ZipFile(remote_buffer) as z:
-                # extract each file and set permissions
-                for member in z.filelist:
-                    z.extract(path=local_directory, member=member)
-                    local_file = local_directory.joinpath(member.filename)
-                    local_file.chmod(mode=mode)
-                    logging.info(f"\t--> {local_file}")
-        else:
-            # write the file to the local directory
-            with local_file.open(mode="wb") as f:
-                shutil.copyfileobj(remote_buffer, f, chunk)
-            # change the permissions mode
-            local_file.chmod(mode=mode)
-            logging.info(f"\t--> {local_file}")
+        # write the file to the local directory
+        logging.info(f"\t--> {local_file}")
+        with local_file.open(mode="wb") as f:
+            shutil.copyfileobj(remote_buffer, f, chunk)
+        # change the permissions mode
+        local_file.chmod(mode=mode)
 
 
 # PURPOSE: create argument parser
