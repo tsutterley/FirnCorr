@@ -57,7 +57,7 @@ def main():
     # regular expression pattern for extracting parameters
     regex_pattern = (
         r"GEMB_(Greenland|Antarctica)(_and_Periphery)?_"
-        r"FAC_\d{4}_\d{4}_(.*?)(\d+day_)?mesh_\d+km_(v.*?).nc$"
+        r"(FAC)_\d{4}_\d{4}_(.*?)(\d+day_)?mesh_\d+km_(v.*?).nc$"
     )
     # short names for regions
     regions = dict(Antarctica="ais", Greenland="gris")
@@ -84,11 +84,11 @@ def main():
             model_region = match.group(1)
             region = regions[model_region]
             # get model version
-            gemb_version = match.group(5).replace("_", ".")
+            gemb_version = match.group(6).replace("_", ".")
             model_version = f"GEMB-{gemb_version}"
             # append time resolution to model version if applicable
-            if match.group(4):
-                time_resolution = match.group(4).replace("_", "")
+            if match.group(5):
+                time_resolution = match.group(5).replace("_", "")
                 model_version += f"-{time_resolution}"
             # build output dictionary for model version and region
             if model_version in output:

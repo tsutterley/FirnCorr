@@ -66,7 +66,7 @@ def fetch_gemb(
     # regular expression pattern for extracting parameters
     regex_pattern = (
         r"GEMB_(Greenland|Antarctica)(_and_Periphery)?_"
-        r"FAC_\d{4}_\d{4}_(.*?)(\d+day_)?mesh_\d+km_(v.*?).nc$"
+        r"(FAC|SMB)_\d{4}_\d{4}_(.*?)(\d+day_)?mesh_\d+km_(v.*?).nc$"
     )
     # get files from latest version of record
     version = str(records_response["id"])
@@ -86,7 +86,7 @@ def fetch_gemb(
             logging.debug(f"Skipping file: {f['filename']}")
             continue
         # extract parameters from filename
-        gemb_version = match.group(4).replace("_", ".")
+        gemb_version = match.group(6).replace("_", ".")
         # check if local directory exists and recursively create if not
         local_directory = directory.joinpath("GEMB", gemb_version)
         local_directory.mkdir(exist_ok=True, parents=True, mode=mode)
