@@ -186,24 +186,6 @@ class DataTree:
         # return the datatree
         return dtree
 
-    def subset(self, c: str | list):
-        """
-        Reduce to a subset of constituents
-
-        Parameters
-        ----------
-        c: str or list
-            List of constituents names
-        """
-        # create copy of datatree
-        dtree = self._dtree.copy()
-        # subset each dataset in the datatree
-        for key, ds in dtree.items():
-            ds = ds.to_dataset()
-            dtree[key] = ds.fcorr.subset(c)
-        # return the datatree
-        return dtree
-
     def transform_as(
         self,
         x: np.ndarray,
