@@ -7,12 +7,12 @@ Firn Model Formats
 
 SMB and firn model files are available from different modeling groups in different formats.
 ``FirnCorr`` has drivers for GEMB, GSFC-fdm, MAR and RACMO model formats, which are presently usually netCDF4 files.
-``FirnCorr`` uses ``pint`` to handle parsing the units of the model data and convert them into standard sets of units.
+``FirnCorr`` uses ``pint`` to handle parsing the units of the model data and convert them into different sets of units.
 
-    - (:math:`m`): meters
-    - (:math:`cm w.e.`): centimeters water equivalent 
-    - (:math:`cm i.e.`): centimeters ice equivalent
-    - (:math:`kg/m^2`): kilograms per square meter (equivalent to :math:`mm w.e.`)
+    - meters (:math:`m`)
+    - centimeters water equivalent (:math:`cm~w.e.`) 
+    - centimeters ice equivalent (:math:`cm~i.e.`)
+    - kilograms per square meter (:math:`kg/m^2`) (equivalent to :math:`mm~w.e.`)
 
 Data Access
 ###########
