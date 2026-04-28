@@ -125,7 +125,7 @@ def fetch_gemb(
 # PURPOSE: create argument parser
 def arguments():
     parser = argparse.ArgumentParser(
-        description="""Downloads Glacier Energy and Mass Balance (GEMB) model outputs"
+        description="""Downloads Glacier Energy and Mass Balance (GEMB) model outputs
             """,
         fromfile_prefix_chars="@",
     )

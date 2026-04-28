@@ -23,7 +23,7 @@ _zenodo_api_url = "https://zenodo.org/api"
 # PURPOSE: create argument parser
 def arguments():
     parser = argparse.ArgumentParser(
-        description="""Create GEMB providers for FirnCorr database"
+        description="""Create GEMB providers for FirnCorr database
             """,
         fromfile_prefix_chars="@",
     )
