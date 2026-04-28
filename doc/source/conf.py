@@ -41,6 +41,14 @@ release = f"v{version}"
 if on_rtd:
     warnings.filterwarnings("ignore")
 
+# create tables
+for module_name in ["model_table"]:
+    spec = importlib.util.spec_from_file_location(
+        module_name, f"{module_name}.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
 # -- General configuration ---------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be

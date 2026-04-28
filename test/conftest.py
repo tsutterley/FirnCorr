@@ -2,7 +2,7 @@ import pytest
 import pathlib
 from FirnCorr.utilities import get_cache_path
 
-# default working data directory for tide models
+# default working data directory for models
 _default_directory = get_cache_path()
 
 def pytest_addoption(parser):

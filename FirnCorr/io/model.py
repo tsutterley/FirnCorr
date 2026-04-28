@@ -204,7 +204,7 @@ class model:
             # skip if model region is unavailable
             if not hasattr(self, g):
                 continue
-            # validate paths: model constituent files
+            # validate paths to model files
             self[g].model_file = self.pathfinder(self[g].model_file)
         # return the model parameters
         self.validate_format()
