@@ -58,6 +58,9 @@ proj4_params["rotated_pole"]["ASE"] = (
 proj4_params["rotated_pole"]["PEN"] = (
     "-m 57.295779506 +proj=ob_tran +o_proj=latlon +o_lat_p=-180.0 +lon_0=30.0"
 )
+proj4_params["rotated_pole"]["ARC"] = (
+    "-m 57.295779506 +proj=ob_tran +o_proj=latlon +o_lat_p=6.55 +lon_0=180.0"
+)
 proj4_params["rotated_pole"]["GRN"] = (
     "-m 57.295779506 +proj=ob_tran +o_proj=latlon +o_lat_p=18.0 +lon_0=-37.5"
 )
