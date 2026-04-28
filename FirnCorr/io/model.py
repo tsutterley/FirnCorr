@@ -166,7 +166,6 @@ class model:
         self.extra_databases = copy.copy(kwargs["extra_databases"])
         self.format = None
         self.name = None
-        self.region = None
         self.verify = copy.copy(kwargs["verify"])
         self.__parameters__ = {}
 
@@ -443,7 +442,7 @@ class model:
             SMB and firn model data
         """
         # import SMB and firn model functions
-        from FirnCorr.io import GSFCfdm, MAR, RACMO
+        from FirnCorr.io import GEMB, GSFCfdm, MAR, RACMO
 
         # set default keyword arguments
         kwargs.setdefault("use_default_units", False)
@@ -456,7 +455,10 @@ class model:
         # extract default model variables
         kwargs.setdefault("variable", self[group].get("variables"))
         # extract dataset from model file(s)
-        if self.engine == "GSFC":
+        if self.engine == "GEMB":
+            # open GEMB file(s) as xarray Dataset
+            ds = GEMB.open_mfdataset(model_file, **kwargs)
+        elif self.engine == "GSFC":
             # open GSFCfdm file(s) as xarray Dataset
             ds = GSFCfdm.open_dataset(model_file, **kwargs)
         elif self.engine == "MAR":
@@ -517,7 +519,6 @@ class model:
         """String representation of the ``io.model`` object"""
         properties = ["FirnCorr.io.model"]
         properties.append(f"    name: {self.name}")
-        properties.append(f"    area: {self.region}")
         return "\n".join(properties)
 
     def __repr__(self):
