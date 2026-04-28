@@ -133,13 +133,22 @@ def open_dataset(
         ds["zfirn"].attrs["units"] = tmp["dFAC"].attrs.get("units", "")
         ds["zfirn"].attrs["group"] = ["dFAC", "centered_FAC"]
     if SMB:
-        # surface mass balance change
+        # total surface mass balance anomalies
         tmp["SMB"] = tmp["accum_SMB"] + tmp["centered_SMB"]
         # calculate original SMB data from anomalies
-        ds["zsmb"] = xr.zeros_like(tmp["SMB"]) + tmp["SMB"].diff(dim="time")
+        SMB = tmp["SMB"].diff(dim="time", n=1, label="upper")
+        SMB = SMB.reindex(time=tmp["SMB"].time, fill_value=0.0)
+        SMB = SMB.assign_coords(time=ds["time"].values)
+        # height change due to SMB
+        ds["zsmb"] = SMB.copy()
         ds["zsmb"].attrs.update(_attributes["zsmb"])
         ds["zsmb"].attrs["units"] = tmp["accum_SMB"].attrs.get("units", "")
         ds["zsmb"].attrs["group"] = ["accum_SMB", "centered_SMB"]
+    # verify mask is applied evenly for all time steps
+    for var in ds.data_vars:
+        ds[var] = ds[var].where(
+            ds[var].notnull().all(dim="time"), np.nan, drop=False
+        )
     # # verify that chunks are unified (if specified)
     if chunks is not None:
         ds = ds.unify_chunks()
