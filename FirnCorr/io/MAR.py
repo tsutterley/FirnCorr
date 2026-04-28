@@ -119,7 +119,7 @@ def open_dataset(
     filename: str | pathlib.Path,
     variable: str | list[str],
     surface_type: int | list[int] = 4,
-    chunks: str | None = "auto",
+    chunks: str | None = None,
     **kwargs,
 ):
     """
@@ -133,7 +133,7 @@ def open_dataset(
         netCDF4 variable name(s) to extract
     surface_type: int or list, default 4
         Surface type(s) to extract (1 = ocean, 4 = land)
-    chunks: str or None, default 'auto'
+    chunks: str or None, default None
         Chunk size for ``xarray`` dataset
     compressed: bool, default False
         If True, read gzipped netCDF4 file

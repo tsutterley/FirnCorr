@@ -76,6 +76,8 @@ def main():
         # raise error if no files found for version
         if not files and args.verbose:
             print(f"No files found for record {version_id}")
+        if not files:
+            continue
         # get model version and region from filename
         for file in files:
             # search for pattern in filename
@@ -102,10 +104,10 @@ def main():
             output[model_version][region]["model_file"] = [FACfile, SMBfile]
             output[model_version][region]["variables"] = variables
             output[model_version][region]["projection"] = EPSG[model_region]
-        output[model_version]["format"] = "GEMB"
-        output[model_version]["name"] = model_version
-        output[model_version]["reference"] = hit["links"]["doi"]
-        output[model_version]["version"] = gemb_version
+            output[model_version]["format"] = "GEMB"
+            output[model_version]["name"] = model_version
+            output[model_version]["reference"] = hit["links"]["doi"]
+            output[model_version]["version"] = gemb_version
 
     # writing model parameters to JSON database file
     json_file = filepath.joinpath("GEMB.json")

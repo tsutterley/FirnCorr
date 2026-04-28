@@ -155,7 +155,7 @@ def open_dataset(
 def open_ascii_dataset(
     filename: str | pathlib.Path,
     variable: str = "SMB",
-    chunks: str | None = "auto",
+    chunks: str | None = None,
     **kwargs,
 ):
     """
@@ -167,7 +167,7 @@ def open_ascii_dataset(
         Path to ASCII file containing RACMO data
     variable: str, default 'SMB'
         Variable name in the ASCII file to extract
-    chunks: str or None, default 'auto'
+    chunks: str or None, default None
         Chunk size for ``xarray`` dataset
     """
     # read the tab-delimited text file
@@ -226,7 +226,7 @@ def open_ascii_dataset(
 def open_netcdf_dataset(
     filename: str | pathlib.Path,
     variable: str | list[str],
-    chunks: str | None = "auto",
+    chunks: str | None = None,
     **kwargs,
 ):
     """
@@ -238,7 +238,7 @@ def open_netcdf_dataset(
         Path to netCDF4 file containing RACMO data
     variable: str or list
         netCDF4 variable name(s) to extract
-    chunks: str or None, default 'auto'
+    chunks: str or None, default None
         Chunk size for ``xarray`` dataset
     compressed: bool, default False
         If True, read gzipped netCDF4 file
@@ -326,7 +326,7 @@ def open_netcdf_dataset(
 def open_downscaled_dataset(
     filename: str | pathlib.Path,
     variable: str | list[str],
-    chunks: str | None = "auto",
+    chunks: str | None = None,
     **kwargs,
 ):
     """
@@ -338,7 +338,7 @@ def open_downscaled_dataset(
         Path to netCDF4 file containing RACMO data
     variable: str or list
         netCDF4 variable name(s) to extract
-    chunks: str or None, default 'auto'
+    chunks: str or None, default None
         Chunk size for ``xarray`` dataset
     compressed: bool, default False
         If True, read gzipped netCDF4 file

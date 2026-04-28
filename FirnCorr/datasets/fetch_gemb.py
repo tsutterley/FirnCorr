@@ -14,7 +14,6 @@ import re
 import shutil
 import logging
 import pathlib
-import zipfile
 import argparse
 import FirnCorr.utilities
 

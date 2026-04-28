@@ -124,7 +124,7 @@
             ]
         },
         "name": "GEMB-v1.3",
-        "reference": "https://doi.org/10.5281/zenodo.7786998",
+        "reference": "https://doi.org/10.5281/zenodo.10669106",
         "version": "v1.3"
     },
     "GEMB-v1.3-5day": {
@@ -205,6 +205,7 @@
                 "accum_SMB"
             ]
         },
+        "format": "GEMB",
         "gris": {
             "model_file": [
                 "GEMB/v1.4/GEMB_Greenland_and_Periphery_FAC_1979_2024_5day_mesh_10km_v1_4.nc",
@@ -217,7 +218,10 @@
                 "centered_SMB",
                 "accum_SMB"
             ]
-        }
+        },
+        "name": "GEMB-v1.4-5day",
+        "reference": "https://doi.org/10.5281/zenodo.14714746",
+        "version": "v1.4"
     },
     "GEMB-v1.5": {
         "ais": {
@@ -265,6 +269,7 @@
                 "accum_SMB"
             ]
         },
+        "format": "GEMB",
         "gris": {
             "model_file": [
                 "GEMB/v1.5/GEMB_Greenland_and_Periphery_FAC_1979_2025_5day_mesh_10km_v1_5.nc",
@@ -277,7 +282,10 @@
                 "centered_SMB",
                 "accum_SMB"
             ]
-        }
+        },
+        "name": "GEMB-v1.5-5day",
+        "reference": "https://doi.org/10.5281/zenodo.19266798",
+        "version": "v1.5"
     },
     "GSFC-fdm-v0": {
         "ais": {

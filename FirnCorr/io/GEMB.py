@@ -80,17 +80,13 @@ def open_mfdataset(
         (d,) = dask.compute(d)
     # merge variables from multiple files
     ds = xr.merge(d, compat="override", join="override")
-    if "centered_FAC" in ds.data_vars and "dFAC" in ds.data_vars:
-        ds["zfirn"] = ds["centered_FAC"] + ds["dFAC"]
-        ds["zfirn"].attrs["group"] = "FAC"
-        ds["zfirn"].attrs["units"] = ds["centered_FAC"].attrs.get("units", "")
     # return xarray dataset
     return ds
 
 
 def open_dataset(
     filename: str | pathlib.Path,
-    chunks: str | None = "auto",
+    chunks: str | None = None,
     **kwargs,
 ):
     """
@@ -100,7 +96,7 @@ def open_dataset(
     ----------
     filename: str or pathlib.Path
         Path to netCDF4 file containing GEMB data
-    chunks: str or None, default 'auto'
+    chunks: str or None, default None
         Chunk size for ``xarray`` dataset
     compressed: bool, default False
         If True, read gzipped netCDF4 file
