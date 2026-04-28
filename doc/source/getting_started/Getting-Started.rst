@@ -10,9 +10,9 @@ SMB and firn model files are available from different modeling groups in differe
 ``FirnCorr`` uses ``pint`` to handle parsing the units of the model data and convert them into different sets of units.
 
     - meters (:math:`m`)
-    - centimeters water equivalent (:math:`cm~w.e.`) 
-    - centimeters ice equivalent (:math:`cm~i.e.`)
-    - kilograms per square meter (:math:`kg/m^2`) (equivalent to :math:`mm~w.e.`)
+    - centimeters water equivalent (:math:`cm\,w.e.`) 
+    - centimeters ice equivalent (:math:`cm\,i.e.`)
+    - kilograms per square meter (:math:`kg/m^2`, equivalent to :math:`mm\,w.e.`)
 
 Data Access
 ###########
