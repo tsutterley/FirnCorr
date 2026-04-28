@@ -2,7 +2,7 @@
 """
 GEMB.py
 Written by Tyler Sutterley (04/2026)
-Reads GEMB data products provided by Nichole Schlegel (NOAA)
+Reads GEMB data products provided by Nicole-Jeanne Schlegel (NOAA)
     and Alex Gardner (JPL)
 
 PYTHON DEPENDENCIES:
