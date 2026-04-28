@@ -37,6 +37,11 @@ _variable_mapping = {
     "ZN5": "zmelt",
     "ZN6": "zsurf",
 }
+# variable attributes for derived fields
+_attributes = dict(
+    zsmb=dict(long_name="Snow Height Change due to SMB"),
+    zaccum=dict(long_name="Snow Height Change due to Accumulation"),
+)
 
 # PROJ4 parameters for MAR model projections
 proj4_params = dict()
@@ -161,8 +166,8 @@ def open_dataset(
     # output dataset
     ds = xr.Dataset()
     # extract x, y and time coordinate arrays
-    ds["x"] = tmp["x"].copy()
     ds["y"] = tmp["y"].copy()
+    ds["x"] = tmp["x"].copy()
     ds["time"] = tmp["time"].copy()
     # check if surface_types is a string
     if isinstance(surface_type, int):
@@ -192,6 +197,21 @@ def open_dataset(
         # add attributes for variable
         ds[imap].attrs["group"] = var
         ds[imap].attrs["units"] = tmp[var].attrs.get("units", "")
+    # check if fields are available to derive SMB and accumulation
+    ZN6 = "zsurf" in ds.data_vars
+    ZN4 = "zfirn" in ds.data_vars
+    ZN5 = "zmelt" in ds.data_vars
+    # calculate derived fields (if available)
+    if ZN6 and ZN4:
+        # height change due to surface mass balance (SMB)
+        ds["zsmb"] = ds["zsurf"] - ds["zfirn"]
+        ds["zsmb"].attrs.update(_attributes["zsmb"])
+        ds["zsmb"].attrs["group"] = ["ZN6", "ZN4"]
+    if ZN6 and ZN4 and ZN5:
+        # height change due to accumulation (SMB - melt)
+        ds["zaccum"] = ds["zsurf"] - ds["zfirn"] - ds["zmelt"]
+        ds["zaccum"].attrs.update(_attributes["zaccum"])
+        ds["zaccum"].attrs["group"] = ["ZN6", "ZN4", "ZN5"]
     # drop coordinates that are not in the dimensions
     drop_coords = [c for c in ds.coords if c not in ds.dims]
     ds = ds.drop_vars(drop_coords)

@@ -3,6 +3,7 @@ Input/output functions for reading and writing SMB and firn data
 """
 
 import os
+from . import GEMB
 from . import GSFCfdm
 from . import MAR
 from . import RACMO

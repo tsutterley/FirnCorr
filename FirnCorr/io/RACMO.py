@@ -283,8 +283,8 @@ def open_netcdf_dataset(
     # output dataset
     ds = xr.Dataset()
     # extract x, y and time coordinate arrays
-    ds["x"] = tmp["x"].copy()
     ds["y"] = tmp["y"].copy()
+    ds["x"] = tmp["x"].copy()
     ds["time"] = tmp["time"].copy()
     # check if variable is a string
     if isinstance(variable, str):
@@ -377,8 +377,8 @@ def open_downscaled_dataset(
     dx = np.abs(tmp["x"][1] - tmp["x"][0])
     dy = np.abs(tmp["y"][1] - tmp["y"][0])
     # convert x and y arrays to cell centers
-    ds["x"] = tmp["x"].copy() - dx / 2.0
     ds["y"] = tmp["y"].copy() - dy / 2.0
+    ds["x"] = tmp["x"].copy() - dx / 2.0
     # parse dates from time variable
     epoch, to_secs = timescale.time.parse_date_string(tmp["time"].units)
     # if monthly: convert to seconds using average month lengths

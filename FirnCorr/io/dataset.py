@@ -947,6 +947,13 @@ class DataArray:
             units,
             flags=re.IGNORECASE,
         )
+        # prepend "equivalent" with underscore to units string
+        units = re.sub(
+            r"\s+equivalent",
+            "_equivalent",
+            units,
+            flags=re.IGNORECASE,
+        )
         # delete periods between water or ice equivalent units
         units = re.sub(
             r"(w|i)\.e[q]?\.",

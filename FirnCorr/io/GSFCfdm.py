@@ -83,11 +83,11 @@ def open_dataset(
     ds["time"] = decode_times(tmp["time"])
     # extract x and y coordinate arrays
     if tmp["x"].ndim == 2:
-        ds["x"] = tmp["x"].isel(y=0).squeeze()
         ds["y"] = tmp["y"].isel(x=0).squeeze()
+        ds["x"] = tmp["x"].isel(y=0).squeeze()
     else:
-        ds["x"] = tmp["x"].copy()
         ds["y"] = tmp["y"].copy()
+        ds["x"] = tmp["x"].copy()
     # check if variable is a string
     if isinstance(variable, str):
         variable = [variable]
