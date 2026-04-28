@@ -2,7 +2,7 @@
 fetch_gesdisc
 =============
 
-- Downloads GES DISC data from a given URL
+- Downloads MERRA-2 products from the Goddard Earth Sciences Data and Information Server Center (GES DISC)
 
 `Source code`__
 

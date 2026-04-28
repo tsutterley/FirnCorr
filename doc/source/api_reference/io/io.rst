@@ -7,6 +7,7 @@ Input/output functions for reading and writing surface mass balance and firn dat
 .. toctree::
     :maxdepth: 1
 
+    GEMB.rst
     GSFCfdm.rst
     MAR.rst
     RACMO.rst

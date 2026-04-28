@@ -1,0 +1,290 @@
+{
+    "GEMB-v1": {
+        "ais": {
+            "model_file": [
+                "GEMB/v1/GEMB_Antarctica_FAC_1979_2022_mesh_10km_v1.nc",
+                "GEMB/v1/GEMB_Antarctica_SMB_1979_2022_mesh_10km_v1.nc"
+            ],
+            "projection": "EPSG:3031",
+            "variables": [
+                "centered_FAC",
+                "dFAC",
+                "centered_SMB",
+                "accum_SMB"
+            ]
+        },
+        "format": "GEMB",
+        "gris": {
+            "model_file": [
+                "GEMB/v1/GEMB_Greenland_FAC_1979_2022_mesh_10km_v1.nc",
+                "GEMB/v1/GEMB_Greenland_SMB_1979_2022_mesh_10km_v1.nc"
+            ],
+            "projection": "EPSG:3413",
+            "variables": [
+                "centered_FAC",
+                "dFAC",
+                "centered_SMB",
+                "accum_SMB"
+            ]
+        },
+        "name": "GEMB-v1",
+        "reference": "https://doi.org/10.5281/zenodo.7130969",
+        "version": "v1"
+    },
+    "GEMB-v1.1": {
+        "ais": {
+            "model_file": [
+                "GEMB/v1.1/GEMB_Antarctica_FAC_1979_2022_mesh_10km_v1_1.nc",
+                "GEMB/v1.1/GEMB_Antarctica_SMB_1979_2022_mesh_10km_v1_1.nc"
+            ],
+            "projection": "EPSG:3031",
+            "variables": [
+                "centered_FAC",
+                "dFAC",
+                "centered_SMB",
+                "accum_SMB"
+            ]
+        },
+        "format": "GEMB",
+        "gris": {
+            "model_file": [
+                "GEMB/v1.1/GEMB_Greenland_FAC_1979_2022_mesh_10km_v1_1.nc",
+                "GEMB/v1.1/GEMB_Greenland_SMB_1979_2022_mesh_10km_v1_1.nc"
+            ],
+            "projection": "EPSG:3413",
+            "variables": [
+                "centered_FAC",
+                "dFAC",
+                "centered_SMB",
+                "accum_SMB"
+            ]
+        },
+        "name": "GEMB-v1.1",
+        "reference": "https://doi.org/10.5281/zenodo.7199528",
+        "version": "v1.1"
+    },
+    "GEMB-v1.2": {
+        "ais": {
+            "model_file": [
+                "GEMB/v1.2/GEMB_Antarctica_FAC_1979_2022_mesh_10km_v1_2.nc",
+                "GEMB/v1.2/GEMB_Antarctica_SMB_1979_2022_mesh_10km_v1_2.nc"
+            ],
+            "projection": "EPSG:3031",
+            "variables": [
+                "centered_FAC",
+                "dFAC",
+                "centered_SMB",
+                "accum_SMB"
+            ]
+        },
+        "format": "GEMB",
+        "gris": {
+            "model_file": [
+                "GEMB/v1.2/GEMB_Greenland_and_Periphery_FAC_1979_2022_mesh_10km_v1_2.nc",
+                "GEMB/v1.2/GEMB_Greenland_and_Periphery_SMB_1979_2022_mesh_10km_v1_2.nc"
+            ],
+            "projection": "EPSG:3413",
+            "variables": [
+                "centered_FAC",
+                "dFAC",
+                "centered_SMB",
+                "accum_SMB"
+            ]
+        },
+        "name": "GEMB-v1.2",
+        "reference": "https://doi.org/10.5281/zenodo.7764391",
+        "version": "v1.2"
+    },
+    "GEMB-v1.3": {
+        "ais": {
+            "model_file": [
+                "GEMB/v1.3/GEMB_Antarctica_FAC_1979_2023_mesh_10km_v1_3.nc",
+                "GEMB/v1.3/GEMB_Antarctica_SMB_1979_2023_mesh_10km_v1_3.nc"
+            ],
+            "projection": "EPSG:3031",
+            "variables": [
+                "centered_FAC",
+                "dFAC",
+                "centered_SMB",
+                "accum_SMB"
+            ]
+        },
+        "format": "GEMB",
+        "gris": {
+            "model_file": [
+                "GEMB/v1.3/GEMB_Greenland_and_Periphery_FAC_1979_2023_mesh_10km_v1_3.nc",
+                "GEMB/v1.3/GEMB_Greenland_and_Periphery_SMB_1979_2023_mesh_10km_v1_3.nc"
+            ],
+            "projection": "EPSG:3413",
+            "variables": [
+                "centered_FAC",
+                "dFAC",
+                "centered_SMB",
+                "accum_SMB"
+            ]
+        },
+        "name": "GEMB-v1.3",
+        "reference": "https://doi.org/10.5281/zenodo.10669106",
+        "version": "v1.3"
+    },
+    "GEMB-v1.3-5day": {
+        "ais": {
+            "model_file": [
+                "GEMB/v1.3/GEMB_Antarctica_FAC_1979_2023_5day_mesh_10km_v1_3.nc",
+                "GEMB/v1.3/GEMB_Antarctica_SMB_1979_2023_5day_mesh_10km_v1_3.nc"
+            ],
+            "projection": "EPSG:3031",
+            "variables": [
+                "centered_FAC",
+                "dFAC",
+                "centered_SMB",
+                "accum_SMB"
+            ]
+        },
+        "format": "GEMB",
+        "gris": {
+            "model_file": [
+                "GEMB/v1.3/GEMB_Greenland_and_Periphery_FAC_1979_2023_5day_mesh_10km_v1_3.nc",
+                "GEMB/v1.3/GEMB_Greenland_and_Periphery_SMB_1979_2023_5day_mesh_10km_v1_3.nc"
+            ],
+            "projection": "EPSG:3413",
+            "variables": [
+                "centered_FAC",
+                "dFAC",
+                "centered_SMB",
+                "accum_SMB"
+            ]
+        },
+        "name": "GEMB-v1.3-5day",
+        "reference": "https://doi.org/10.5281/zenodo.10806250",
+        "version": "v1.3"
+    },
+    "GEMB-v1.4": {
+        "ais": {
+            "model_file": [
+                "GEMB/v1.4/GEMB_Antarctica_FAC_1979_2024_mesh_10km_v1_4.nc",
+                "GEMB/v1.4/GEMB_Antarctica_SMB_1979_2024_mesh_10km_v1_4.nc"
+            ],
+            "projection": "EPSG:3031",
+            "variables": [
+                "centered_FAC",
+                "dFAC",
+                "centered_SMB",
+                "accum_SMB"
+            ]
+        },
+        "format": "GEMB",
+        "gris": {
+            "model_file": [
+                "GEMB/v1.4/GEMB_Greenland_and_Periphery_FAC_1979_2024_mesh_10km_v1_4.nc",
+                "GEMB/v1.4/GEMB_Greenland_and_Periphery_SMB_1979_2024_mesh_10km_v1_4.nc"
+            ],
+            "projection": "EPSG:3413",
+            "variables": [
+                "centered_FAC",
+                "dFAC",
+                "centered_SMB",
+                "accum_SMB"
+            ]
+        },
+        "name": "GEMB-v1.4",
+        "reference": "https://doi.org/10.5281/zenodo.14714746",
+        "version": "v1.4"
+    },
+    "GEMB-v1.4-5day": {
+        "ais": {
+            "model_file": [
+                "GEMB/v1.4/GEMB_Antarctica_FAC_1979_2024_5day_mesh_10km_v1_4.nc",
+                "GEMB/v1.4/GEMB_Antarctica_SMB_1979_2024_5day_mesh_10km_v1_4.nc"
+            ],
+            "projection": "EPSG:3031",
+            "variables": [
+                "centered_FAC",
+                "dFAC",
+                "centered_SMB",
+                "accum_SMB"
+            ]
+        },
+        "format": "GEMB",
+        "gris": {
+            "model_file": [
+                "GEMB/v1.4/GEMB_Greenland_and_Periphery_FAC_1979_2024_5day_mesh_10km_v1_4.nc",
+                "GEMB/v1.4/GEMB_Greenland_and_Periphery_SMB_1979_2024_5day_mesh_10km_v1_4.nc"
+            ],
+            "projection": "EPSG:3413",
+            "variables": [
+                "centered_FAC",
+                "dFAC",
+                "centered_SMB",
+                "accum_SMB"
+            ]
+        },
+        "name": "GEMB-v1.4-5day",
+        "reference": "https://doi.org/10.5281/zenodo.14714746",
+        "version": "v1.4"
+    },
+    "GEMB-v1.5": {
+        "ais": {
+            "model_file": [
+                "GEMB/v1.5/GEMB_Antarctica_FAC_1979_2025_mesh_10km_v1_5.nc",
+                "GEMB/v1.5/GEMB_Antarctica_SMB_1979_2025_mesh_10km_v1_5.nc"
+            ],
+            "projection": "EPSG:3031",
+            "variables": [
+                "centered_FAC",
+                "dFAC",
+                "centered_SMB",
+                "accum_SMB"
+            ]
+        },
+        "format": "GEMB",
+        "gris": {
+            "model_file": [
+                "GEMB/v1.5/GEMB_Greenland_and_Periphery_FAC_1979_2025_mesh_10km_v1_5.nc",
+                "GEMB/v1.5/GEMB_Greenland_and_Periphery_SMB_1979_2025_mesh_10km_v1_5.nc"
+            ],
+            "projection": "EPSG:3413",
+            "variables": [
+                "centered_FAC",
+                "dFAC",
+                "centered_SMB",
+                "accum_SMB"
+            ]
+        },
+        "name": "GEMB-v1.5",
+        "reference": "https://doi.org/10.5281/zenodo.19266798",
+        "version": "v1.5"
+    },
+    "GEMB-v1.5-5day": {
+        "ais": {
+            "model_file": [
+                "GEMB/v1.5/GEMB_Antarctica_FAC_1979_2025_5day_mesh_10km_v1_5.nc",
+                "GEMB/v1.5/GEMB_Antarctica_SMB_1979_2025_5day_mesh_10km_v1_5.nc"
+            ],
+            "projection": "EPSG:3031",
+            "variables": [
+                "centered_FAC",
+                "dFAC",
+                "centered_SMB",
+                "accum_SMB"
+            ]
+        },
+        "format": "GEMB",
+        "gris": {
+            "model_file": [
+                "GEMB/v1.5/GEMB_Greenland_and_Periphery_FAC_1979_2025_5day_mesh_10km_v1_5.nc",
+                "GEMB/v1.5/GEMB_Greenland_and_Periphery_SMB_1979_2025_5day_mesh_10km_v1_5.nc"
+            ],
+            "projection": "EPSG:3413",
+            "variables": [
+                "centered_FAC",
+                "dFAC",
+                "centered_SMB",
+                "accum_SMB"
+            ]
+        },
+        "name": "GEMB-v1.5-5day",
+        "reference": "https://doi.org/10.5281/zenodo.19266798",
+        "version": "v1.5"
+    }
+}
