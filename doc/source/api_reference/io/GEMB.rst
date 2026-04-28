@@ -2,7 +2,7 @@
 GEMB
 =======
 
-- Reads GEMB data products provided by Nichole Schlegel (NOAA) and Alex Gardner (JPL)
+- Reads GEMB data products provided by Nicole-Jeanne Schlegel (NOAA) and Alex Gardner (JPL)
 
 Calling Sequence
 ----------------
