@@ -257,7 +257,7 @@ def open_netcdf_dataset(
     else:
         tmp = xr.open_dataset(filename, mask_and_scale=True, chunks=chunks)
     # regular expression pattern for extracting parameters
-    pattern = r"[F|X]?(GRN|ANT|ASE|PEN)[\d+]"
+    pattern = r"[F|X]?(ARC|GRN|ANT|ASE|PEN)[\d+]"
     m = re.search(pattern, pathlib.Path(filename).stem)
     if m:
         region = m.group(1)
