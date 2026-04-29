@@ -20,6 +20,7 @@ PYTHON DEPENDENCIES:
         https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
+    Updated 04/2026: added combine_attrs to merge conflicts into a list
     Written 04/2026
 """
 
@@ -29,6 +30,7 @@ import pyproj
 import warnings
 import numpy as np
 import xarray as xr
+from xarray.structure.merge import equivalent_attrs
 
 # suppress warnings
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -37,6 +39,7 @@ __all__ = [
     "DataTree",
     "Dataset",
     "DataArray",
+    "combine_attrs",
     "register_datatree_subaccessor",
     "register_dataset_subaccessor",
     "register_dataarray_subaccessor",
@@ -967,6 +970,56 @@ class DataArray:
             return False
         else:
             return True
+
+
+def combine_attrs(attrs_list: list[dict], context: str | None) -> dict:
+    """
+    Combine attributes from multiple datasets into a single dictionary
+    merging conflicting values into a list
+
+    Parameters
+    ----------
+    attrs_list: list of dict
+        List of attribute dictionaries from multiple datasets
+    context: str
+        Context for the attributes being combined
+
+    Returns
+    -------
+    result: dict
+        Combined attributes dictionary
+    """
+    # initialize combined attributes with the first dictionary in the list
+    result = attrs_list[0].copy()
+    append_keys = set()
+    # for each attribute key, check if values are equivalent
+    for attrs in attrs_list:
+        for key, value in attrs.items():
+            # skip keys that have already been identified as conflicts
+            if key in append_keys:
+                continue
+            # check if the attribute values are equivalent
+            if not equivalent_attrs(result.get(key), value):
+                append_keys.add(key)
+    # combine conflicting attributes into lists
+    for key in append_keys:
+        # build list of values for this key across all datasets
+        combined_values = []
+        for attrs in attrs_list:
+            # check if the key is present
+            # if a list or tuple: extend the combined values
+            # if a single value: append to the combined values
+            if key in attrs and isinstance(attrs[key], (list, tuple)):
+                combined_values.extend(attrs[key])
+            elif key in attrs:
+                combined_values.append(attrs[key])
+        # clean up combined results: removing duplicates and null values
+        result[key] = sorted(set(filter(None, combined_values)))
+        # if only one unique value remains, simplify back to a single value
+        if len(result[key]) == 1:
+            result[key] = result[key].pop()
+    # return the combined attributes
+    return result
 
 
 def register_datatree_subaccessor(name):

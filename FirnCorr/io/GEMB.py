@@ -13,6 +13,8 @@ PYTHON DEPENDENCIES:
         https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
+    Updated 04/2026: added lineage attribute to save model filename(s)
+        check if coordinate reference system is provided in attributes
     Written 04/2026
 """
 
@@ -24,6 +26,7 @@ import logging
 import pathlib
 import xarray as xr
 import numpy as np
+from FirnCorr.io.dataset import combine_attrs
 from FirnCorr.utilities import import_dependency, dependency_available
 
 # attempt imports
@@ -62,9 +65,6 @@ def open_mfdataset(
     kwargs: dict
         Additional keyword arguments for opening GEMB files
     """
-    # set default keyword arguments
-    kwargs.setdefault("reference", None)
-    kwargs.setdefault("range", None)
     # merge multiple granules
     if parallel and dask_available:
         opener = dask.delayed(open_dataset)
@@ -74,12 +74,17 @@ def open_mfdataset(
     if isinstance(filenames, str):
         filenames = [filenames]
     # read each file as xarray dataset and append to list
-    d = [opener(f, **kwargs) for f in filenames]
+    datasets = [opener(f, **kwargs) for f in filenames]
     # read datasets as dask arrays
     if parallel and dask_available:
-        (d,) = dask.compute(d)
+        (datasets,) = dask.compute(datasets)
     # merge variables from multiple files
-    ds = xr.merge(d, compat="override", join="override")
+    ds = xr.merge(
+        datasets,
+        combine_attrs=combine_attrs,
+        compat="override",
+        join="override",
+    )
     # return xarray dataset
     return ds
 
@@ -153,6 +158,13 @@ def open_dataset(
     if chunks is not None:
         ds = ds.unify_chunks()
     # add attributes to dataset
-    ds.attrs["crs"] = proj4_params[region]
+    ds.attrs["lineage"] = pathlib.Path(filename).name
+    m = re.search(r"EPSG[:]?(\d+)", tmp.y.attrs.get("mapping", ""), re.I)
+    if m:
+        # extract crs parameters from dataset attributes
+        ds.attrs["crs"] = int(m.group(1))
+    else:
+        # add default crs for region
+        ds.attrs["crs"] = proj4_params[region]
     # return the dataset
     return ds

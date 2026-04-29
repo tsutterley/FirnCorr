@@ -13,6 +13,8 @@ PYTHON DEPENDENCIES:
         https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
+    Updated 04/2026: added lineage attribute to save model filename(s)
+        check if x and y coordinates are present in the downscaled dataset
     Written 04/2026
 """
 
@@ -25,6 +27,7 @@ import pathlib
 import xarray as xr
 import numpy as np
 import timescale.time
+from FirnCorr.io.dataset import combine_attrs
 from FirnCorr.utilities import import_dependency, dependency_available
 
 # attempt imports
@@ -94,9 +97,6 @@ def open_mfdataset(
     kwargs: dict
         Additional keyword arguments for opening RACMO files
     """
-    # set default keyword arguments
-    kwargs.setdefault("reference", None)
-    kwargs.setdefault("range", None)
     # merge multiple granules
     if parallel and dask_available:
         opener = dask.delayed(open_dataset)
@@ -106,17 +106,29 @@ def open_mfdataset(
     if isinstance(filenames, str):
         filenames = [filenames]
     # read each file as xarray dataset and append to list
-    d = [opener(f, **kwargs) for f in filenames]
+    datasets = [opener(f, **kwargs) for f in filenames]
     # read datasets as dask arrays
     if parallel and dask_available:
-        (d,) = dask.compute(d)
+        (datasets,) = dask.compute(datasets)
     # merge or concatenate datasets
     if how == "merge":
         # merge variables from multiple files
-        ds = xr.merge(d, compat="override", join="override")
+        ds = xr.merge(
+            datasets,
+            combine_attrs=combine_attrs,
+            compat="override",
+            join="override",
+        )
     elif how == "concat":
         # concatenate a single variable over time
-        ds = xr.concat(d, dim="time", compat="override", join="override")
+        ds = xr.concat(
+            datasets,
+            combine_attrs=combine_attrs,
+            compat="override",
+            coords="minimal",
+            dim="time",
+            join="override",
+        )
     else:
         # raise an error for unknown or invalid merge methods
         raise ValueError(f"Invalid merge method: {how}")
@@ -221,6 +233,7 @@ def open_ascii_dataset(
     if chunks is not None:
         ds = ds.chunk(chunks)
     # add attributes to dataset
+    ds.attrs["lineage"] = pathlib.Path(filename).name
     ds[variable].attrs["units"] = "mm w.e."
     # return the dataset
     return ds
@@ -313,6 +326,7 @@ def open_netcdf_dataset(
     drop_coords = [c for c in ds.coords if c not in ds.dims]
     ds = ds.drop_vars(drop_coords)
     # add attributes to dataset
+    ds.attrs["lineage"] = pathlib.Path(filename).name
     if "rotated_pole" in tmp.data_vars:
         # extract rotated pole parameters from dataset attributes
         ds.attrs["crs"] = tmp["rotated_pole"].proj4_params
@@ -363,6 +377,12 @@ def open_downscaled_dataset(
     # default to Greenland if region cannot be determined from filename
     m = re.search(r"[F|X]?(GRN|ANT)[\d+]", pathlib.Path(filename).stem)
     region = m.group(1) if m else "GRN"
+    # set the x and y coordinates if presently unavailable in the dataset
+    # some versions of the downscaled product have (r)lon and (r)lat variables
+    if "x" not in tmp.coords and "lon" in tmp.data_vars and tmp.lon.ndim == 1:
+        tmp = tmp.assign_coords(x=tmp.lon)
+    if "y" not in tmp.coords and "lat" in tmp.data_vars and tmp.lat.ndim == 1:
+        tmp = tmp.assign_coords(y=tmp.lat)
     # get coordinate names
     mapping = {}
     for v in tmp.coords:
@@ -422,6 +442,7 @@ def open_downscaled_dataset(
     drop_coords = [c for c in ds.coords if c not in ds.dims]
     ds = ds.drop_vars(drop_coords)
     # add attributes to dataset
+    ds.attrs["lineage"] = pathlib.Path(filename).name
     m = re.search(r"EPSG[:]?(\d+)", tmp.attrs.get("grid", ""), re.I)
     if m:
         # extract crs parameters from dataset attributes
