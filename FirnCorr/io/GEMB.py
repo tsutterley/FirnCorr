@@ -159,7 +159,8 @@ def open_dataset(
         ds = ds.unify_chunks()
     # add attributes to dataset
     ds.attrs["lineage"] = pathlib.Path(filename).name
-    m = re.search(r"EPSG[:]?(\d+)", tmp.y.attrs.get("mapping", ""), re.I)
+    grid_mapping = tmp.y.attrs.get("mapping", "")
+    m = re.search(r"EPSG[:]?(\d+)", grid_mapping, re.IGNORECASE)
     if m:
         # extract crs parameters from dataset attributes
         ds.attrs["crs"] = int(m.group(1))

@@ -30,7 +30,8 @@ import pyproj
 import warnings
 import numpy as np
 import xarray as xr
-from xarray.structure.merge import equivalent_attrs
+from typing import Any
+from xarray.core.utils import equivalent
 
 # suppress warnings
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -471,6 +472,22 @@ class Dataset:
                 )
         # return xarray dataset
         return other
+
+    def get(self, name: str):
+        """
+        Get variable in ``Dataset`` using a case-insensitive search
+
+        Parameters
+        ----------
+        name: str
+            Name of variable to find in dataset
+
+        Returns
+        -------
+        var: xarray.DataArray or None
+            Variable from dataset if found, otherwise None
+        """
+        return get_variable(self._ds, name)
 
     def gaussian_filter(
         self,
@@ -972,7 +989,11 @@ class DataArray:
             return True
 
 
-def combine_attrs(attrs_list: list[dict], context: str | None) -> dict:
+def combine_attrs(
+    attrs_list: list[dict],
+    context: str | None,
+    skip_keys: list[str] = ["units"],
+) -> dict:
     """
     Combine attributes from multiple datasets into a single dictionary
     merging conflicting values into a list
@@ -983,6 +1004,8 @@ def combine_attrs(attrs_list: list[dict], context: str | None) -> dict:
         List of attribute dictionaries from multiple datasets
     context: str
         Context for the attributes being combined
+    skip_keys: list of str, default ["units"]
+        List of attribute keys to skip from comparison
 
     Returns
     -------
@@ -996,7 +1019,8 @@ def combine_attrs(attrs_list: list[dict], context: str | None) -> dict:
     for attrs in attrs_list:
         for key, value in attrs.items():
             # skip keys that have already been identified as conflicts
-            if key in append_keys:
+            # and keys that should be skipped from comparison
+            if key in append_keys or key in skip_keys:
                 continue
             # check if the attribute values are equivalent
             if not equivalent_attrs(result.get(key), value):
@@ -1020,6 +1044,61 @@ def combine_attrs(attrs_list: list[dict], context: str | None) -> dict:
             result[key] = result[key].pop()
     # return the combined attributes
     return result
+
+
+def equivalent_attrs(a: Any, b: Any) -> bool:
+    """
+    Check if two attribute values are equivalent (ignoring case for strings)
+
+    Adapted from ``xarray.structure.merge.equivalent_attrs``
+
+    Parameters
+    ----------
+    a: Any
+        First attribute value
+    b: Any
+        Second attribute value
+    """
+    # if both attributes are strings, compare them case-insensitively
+    if isinstance(a, str) and isinstance(b, str):
+        return equivalent(a.casefold(), b.casefold())
+    # otherwise, compare the attributes directly
+    # exceptions would indicate comparison is ambiguous
+    try:
+        return equivalent(a, b)
+    except (TypeError, ValueError):
+        return False
+
+
+def get_variable(ds: xr.Dataset, name: str) -> xr.DataArray:
+    """
+    Get variable from a ``Dataset`` using a case-insensitive search
+
+    Parameters
+    ----------
+    ds: xarray.Dataset
+        Dataset to search for variable
+    name: str
+        Name the variable to find
+
+    Returns
+    -------
+    var: xarray.DataArray
+        Variable matching the input name
+    """
+    # case-insensitive search for variable in dataset
+    imap = [v for v in ds.data_vars if (v.casefold() == name.casefold())]
+    # check if variable is in dataset
+    if name in ds.data_vars:
+        pass
+    elif not any(imap):
+        return None
+    elif len(imap) == 1:
+        name = imap.pop()
+    elif len(imap) > 1:
+        raise ValueError(f"Ambiguous mapping of {name} in dataset")
+    # return the variable from the dataset
+    return ds[name]
 
 
 def register_datatree_subaccessor(name):

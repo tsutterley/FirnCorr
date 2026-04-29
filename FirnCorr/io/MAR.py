@@ -160,13 +160,13 @@ def open_dataset(
     # get coordinate names
     mapping = {}
     for v in tmp.coords:
-        if re.match(r"X", tmp[v].attrs.get("axis", ""), re.I):
+        if re.match(r"X", tmp[v].attrs.get("axis", ""), re.IGNORECASE):
             mapping[v] = "x"
-        elif re.match(r"Y", tmp[v].attrs.get("axis", ""), re.I):
+        elif re.match(r"Y", tmp[v].attrs.get("axis", ""), re.IGNORECASE):
             mapping[v] = "y"
-        elif re.match(r"T", tmp[v].attrs.get("axis", ""), re.I):
+        elif re.match(r"T", tmp[v].attrs.get("axis", ""), re.IGNORECASE):
             mapping[v] = "time"
-        elif re.match(r"sector$", v, re.I):
+        elif re.match(r"sector$", v, re.IGNORECASE):
             mapping[v] = "sector"
     # rename to standardized coordinate names
     tmp = tmp.rename(mapping)

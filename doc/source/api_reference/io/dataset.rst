@@ -23,6 +23,10 @@ General Attributes and Methods
 
 .. autofunction:: FirnCorr.io.dataset.combine_attrs
 
+.. autofunction:: FirnCorr.io.dataset.equivalent_attrs
+
+.. autofunction:: FirnCorr.io.dataset.get_variable
+
 .. autofunction:: FirnCorr.io.dataset.register_datatree_subaccessor
 
 .. autofunction:: FirnCorr.io.dataset.register_dataset_subaccessor

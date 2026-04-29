@@ -14,6 +14,7 @@ PYTHON DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 04/2026: added lineage attribute to save model filename(s)
+        add a case-insensitive search for variables in input dataset
         check if x and y coordinates are present in the downscaled dataset
     Written 04/2026
 """
@@ -27,7 +28,7 @@ import pathlib
 import xarray as xr
 import numpy as np
 import timescale.time
-from FirnCorr.io.dataset import combine_attrs
+from FirnCorr.io.dataset import combine_attrs, get_variable
 from FirnCorr.utilities import import_dependency, dependency_available
 
 # attempt imports
@@ -36,15 +37,13 @@ dask_available = dependency_available("dask")
 
 # mapping of netCDF4 variable names to internal variable names
 _variable_mapping = {
-    "SMB": "SMB",
     "smb": "SMB",
-    "SMB_rec": "SMB",  # downscaled SMB
     "smb_rec": "SMB",  # downscaled SMB
     "precipcorr": "precip",  # downscaled precipitation
     "refreezecorr": "refreeze",  # downscaled meltwater refreeze
     "runoffcorr": "runoff",  # downscaled runoff
     "snowmeltcorr": "snowmelt",  # downscaled snowmelt
-    "FirnAir": "zfirn",
+    "firnair": "zfirn",
     "hgtsrf": "zsurf",
     "zs": "zsurf",
 }
@@ -281,11 +280,11 @@ def open_netcdf_dataset(
     # get coordinate names
     mapping = {}
     for v in tmp.coords:
-        if re.match(r"X", tmp[v].attrs.get("axis", ""), re.I):
+        if re.match(r"X", tmp[v].attrs.get("axis", ""), re.IGNORECASE):
             mapping[v] = "x"
-        elif re.match(r"Y", tmp[v].attrs.get("axis", ""), re.I):
+        elif re.match(r"Y", tmp[v].attrs.get("axis", ""), re.IGNORECASE):
             mapping[v] = "y"
-        elif re.match(r"T", tmp[v].attrs.get("axis", ""), re.I):
+        elif re.match(r"T", tmp[v].attrs.get("axis", ""), re.IGNORECASE):
             mapping[v] = "time"
     # verify mapping
     if "x" not in mapping and "rlon" in tmp.coords:
@@ -307,21 +306,25 @@ def open_netcdf_dataset(
         variable = [variable]
     # loop over variables to extract
     for var in variable:
-        # mapping between netCDF4 variable names and internal variable names
-        imap = _variable_mapping.get(var, var)
-        # check if variable is in dataset
-        if var not in tmp.data_vars:
+        # get variable in dataset (case-insensitive search)
+        darr = get_variable(tmp, var)
+        # skip if the variable is not found in the dataset
+        if darr is None:
             logging.info(f"Variable {var} not found in dataset")
             continue
-        # read dataset and remove singleton dimensions
-        ds[imap] = tmp[var].squeeze()
+        elif darr.name != var:
+            logging.info(f"Variable {var} mapped to {darr.name} in dataset")
+        # mapping between netCDF4 variable names and internal variable names
+        imap = _variable_mapping.get(darr.name.lower(), var)
+        # remove singleton dimensions from data array and assign to dataset
+        ds[imap] = darr.squeeze()
         # replace zeros with NaNs
         ds[imap] = ds[imap].where(
             ds[imap].sum(dim="time", skipna=False) != 0, np.nan, drop=False
         )
         # add attributes for variable
-        ds[imap].attrs["group"] = var
-        ds[imap].attrs["units"] = tmp[var].attrs.get("units", "")
+        ds[imap].attrs["group"] = darr.name
+        ds[imap].attrs["units"] = darr.attrs.get("units", "")
     # drop coordinates that are not in the dimensions
     drop_coords = [c for c in ds.coords if c not in ds.dims]
     ds = ds.drop_vars(drop_coords)
@@ -379,18 +382,22 @@ def open_downscaled_dataset(
     region = m.group(1) if m else "GRN"
     # set the x and y coordinates if presently unavailable in the dataset
     # some versions of the downscaled product have (r)lon and (r)lat variables
-    if "x" not in tmp.coords and "lon" in tmp.data_vars and tmp.lon.ndim == 1:
-        tmp = tmp.assign_coords(x=tmp.lon)
-    if "y" not in tmp.coords and "lat" in tmp.data_vars and tmp.lat.ndim == 1:
-        tmp = tmp.assign_coords(y=tmp.lat)
+    if "x" not in tmp.coords and "y" not in tmp.coords:
+        for v in tmp.data_vars:
+            if tmp[v].ndim > 1:
+                continue
+            elif re.match(r"X", tmp[v].attrs.get("axis", ""), re.IGNORECASE):
+                tmp = tmp.assign_coords(x=tmp[v])
+            elif re.match(r"Y", tmp[v].attrs.get("axis", ""), re.IGNORECASE):
+                tmp = tmp.assign_coords(y=tmp[v])
     # get coordinate names
     mapping = {}
     for v in tmp.coords:
-        if re.match(r"X", tmp[v].attrs.get("axis", ""), re.I):
+        if re.match(r"X", tmp[v].attrs.get("axis", ""), re.IGNORECASE):
             mapping[v] = "x"
-        elif re.match(r"Y", tmp[v].attrs.get("axis", ""), re.I):
+        elif re.match(r"Y", tmp[v].attrs.get("axis", ""), re.IGNORECASE):
             mapping[v] = "y"
-        elif re.match(r"T", tmp[v].attrs.get("axis", ""), re.I):
+        elif re.match(r"T", tmp[v].attrs.get("axis", ""), re.IGNORECASE):
             mapping[v] = "time"
     # rename to standardized coordinate names
     tmp = tmp.rename(mapping)
@@ -405,7 +412,7 @@ def open_downscaled_dataset(
     # parse dates from time variable
     epoch, to_secs = timescale.time.parse_date_string(tmp["time"].units)
     # if monthly: convert to seconds using average month lengths
-    if re.search(r"month", tmp["time"].units, re.I):
+    if re.search(r"month", tmp["time"].units, re.IGNORECASE):
         to_secs = 365.25 * 86400.0 / 12.0
     # convert delta times from seconds since epoch to datetime objects
     ts = timescale.from_deltatime(tmp["time"] * to_secs, epoch=epoch)
@@ -423,27 +430,32 @@ def open_downscaled_dataset(
         variable = [variable]
     # loop over variables to extract
     for var in variable:
-        # mapping between netCDF4 variable names and internal variable names
-        imap = _variable_mapping.get(var, var)
-        # check if variable is in dataset
-        if var not in tmp.data_vars:
+        # get variable in dataset (case-insensitive search)
+        darr = get_variable(tmp, var)
+        # skip if the variable is not found in the dataset
+        if darr is None:
             logging.info(f"Variable {var} not found in dataset")
             continue
-        # read dataset and remove singleton dimensions
-        ds[imap] = ("time", "y", "x"), tmp[var].squeeze().data
+        elif darr.name != var:
+            logging.info(f"Variable {var} mapped to {darr.name} in dataset")
+        # mapping between netCDF4 variable names and internal variable names
+        imap = _variable_mapping.get(darr.name.lower(), var)
+        # remove singleton dimensions from data array and assign to dataset
+        ds[imap] = ("time", "y", "x"), darr.squeeze().data
         # replace points where all values are zero with NaNs
         ds[imap] = ds[imap].where(
             ds[imap].sum(dim="time", skipna=False) != 0, np.nan, drop=False
         )
         # add attributes for variable
-        ds[imap].attrs["group"] = var
-        ds[imap].attrs["units"] = tmp[var].attrs.get("units", "")
+        ds[imap].attrs["group"] = darr.name
+        ds[imap].attrs["units"] = darr.attrs.get("units", "")
     # drop coordinates that are not in the dimensions
     drop_coords = [c for c in ds.coords if c not in ds.dims]
     ds = ds.drop_vars(drop_coords)
     # add attributes to dataset
     ds.attrs["lineage"] = pathlib.Path(filename).name
-    m = re.search(r"EPSG[:]?(\d+)", tmp.attrs.get("grid", ""), re.I)
+    grid_mapping = tmp.attrs.get("grid", "")
+    m = re.search(r"EPSG[:]?(\d+)", grid_mapping, re.IGNORECASE)
     if m:
         # extract crs parameters from dataset attributes
         ds.attrs["crs"] = int(m.group(1))
