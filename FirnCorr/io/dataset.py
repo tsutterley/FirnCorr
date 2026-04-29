@@ -41,6 +41,8 @@ __all__ = [
     "Dataset",
     "DataArray",
     "combine_attrs",
+    "equivalent_attrs",
+    "get_variable",
     "register_datatree_subaccessor",
     "register_dataset_subaccessor",
     "register_dataarray_subaccessor",
@@ -992,7 +994,7 @@ class DataArray:
 def combine_attrs(
     attrs_list: list[dict],
     context: str | None,
-    skip_keys: list[str] = ["units"],
+    **kwargs,
 ) -> dict:
     """
     Combine attributes from multiple datasets into a single dictionary
@@ -1012,6 +1014,11 @@ def combine_attrs(
     result: dict
         Combined attributes dictionary
     """
+    # set default keyword arguments
+    skip_keys = kwargs.get("skip_keys", ["units"])
+    # return an empty dictionary when no attributes are provided
+    if not attrs_list:
+        return {}
     # initialize combined attributes with the first dictionary in the list
     result = attrs_list[0].copy()
     append_keys = set()
