@@ -12,6 +12,7 @@ PYTHON DEPENDENCIES:
         https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
+    Updated 04/2026: added lineage attribute to save model filename
     Written 04/2026
 """
 
@@ -108,6 +109,7 @@ def open_dataset(
     drop_coords = [c for c in ds.coords if c not in ds.dims]
     ds = ds.drop_vars(drop_coords)
     # add attributes to dataset
+    ds.attrs["lineage"] = pathlib.Path(filename).name
     ds.attrs["crs"] = proj4_params[region]
     # return the dataset
     return ds

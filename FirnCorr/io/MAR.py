@@ -13,6 +13,7 @@ PYTHON DEPENDENCIES:
         https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
+    Updated 04/2026: added lineage attribute to save model filename(s)
     Written 04/2026
 """
 
@@ -24,6 +25,7 @@ import logging
 import pathlib
 import xarray as xr
 import numpy as np
+from FirnCorr.io.dataset import combine_attrs
 from FirnCorr.utilities import import_dependency, dependency_available
 
 # attempt imports
@@ -105,12 +107,19 @@ def open_mfdataset(
     if isinstance(filenames, str):
         filenames = [filenames]
     # read each file as xarray dataset and append to list
-    d = [opener(f, **kwargs) for f in filenames]
+    datasets = [opener(f, **kwargs) for f in filenames]
     # read datasets as dask arrays
     if parallel and dask_available:
-        (d,) = dask.compute(d)
+        (datasets,) = dask.compute(datasets)
     # concatenate a single variable over time
-    ds = xr.concat(d, dim="time", compat="override", join="override")
+    ds = xr.concat(
+        datasets,
+        combine_attrs=combine_attrs,
+        compat="override",
+        coords="minimal",
+        dim="time",
+        join="override",
+    )
     # return xarray dataset
     return ds
 
@@ -151,13 +160,13 @@ def open_dataset(
     # get coordinate names
     mapping = {}
     for v in tmp.coords:
-        if re.match(r"X", tmp[v].attrs.get("axis", ""), re.I):
+        if re.match(r"X", tmp[v].attrs.get("axis", ""), re.IGNORECASE):
             mapping[v] = "x"
-        elif re.match(r"Y", tmp[v].attrs.get("axis", ""), re.I):
+        elif re.match(r"Y", tmp[v].attrs.get("axis", ""), re.IGNORECASE):
             mapping[v] = "y"
-        elif re.match(r"T", tmp[v].attrs.get("axis", ""), re.I):
+        elif re.match(r"T", tmp[v].attrs.get("axis", ""), re.IGNORECASE):
             mapping[v] = "time"
-        elif re.match(r"sector$", v, re.I):
+        elif re.match(r"sector$", v, re.IGNORECASE):
             mapping[v] = "sector"
     # rename to standardized coordinate names
     tmp = tmp.rename(mapping)
@@ -219,6 +228,7 @@ def open_dataset(
     if chunks is not None:
         ds = ds.unify_chunks()
     # add attributes to dataset
+    ds.attrs["lineage"] = pathlib.Path(filename).name
     ds.attrs["crs"] = proj4_params[region]
     # return the dataset
     return ds
