@@ -798,7 +798,7 @@ class Dataset:
 
     def to_geographic(self, crs: str | int | dict = 4326):
         """
-        Get latitude and longitude coordinates for the ``DataArray``
+        Get latitude and longitude coordinates for the ``Dataset``
 
         Parameters
         ----------
