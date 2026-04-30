@@ -327,9 +327,8 @@ class Dataset:
         elif self.crs.is_projected and crs.get("proj") == "stere":
             # stereographic projection
             geodetic_crs = getattr(self.crs, "geodetic_crs", 4326)
-            self.to_geographic(crs=geodetic_crs)
-            # latitude and true-scale latitude
-            lat = self._lat.values
+            # get latitude and true-scale latitude
+            _, lat = self.to_geographic(crs=geodetic_crs)
             lat_ts = crs.get("lat_ts", 90.0)
             # calculate scaling factors for area distortions
             ps_scale = scale_factors(lat, flat=flat, reference_latitude=lat_ts)
@@ -341,6 +340,16 @@ class Dataset:
             dy = axis_scale * np.abs(self._y[1] - self._y[0])
             # calculate area of each grid cell
             area = ps_scale * dx * dy
+        else:
+            # projected coordinates (assume Cartesian)
+            # calculate scaling factors to convert from axis units to meters
+            axis_units = 1.0 * __ureg__.parse_units(self.axis_units)
+            axis_scale = axis_units.to(__ureg__.meter).magnitude
+            # grid spacing in the x and y directions
+            dx = axis_scale * np.abs(self._x[1] - self._x[0])
+            dy = axis_scale * np.abs(self._y[1] - self._y[0])
+            # calculate area of each grid cell
+            area = dx * dy
         # return area as xarray DataArray
         return xr.DataArray(area, coords=coords, dims=["y", "x"], attrs=attrs)
 
@@ -804,6 +813,13 @@ class Dataset:
         ----------
         crs: str, int, or dict, default 4326 (WGS84 Latitude/Longitude)
             Coordinate reference system for geographic coordinates
+
+        Returns
+        -------
+        lon: xarray.DataArray
+            Longitude coordinates for the dataset
+        lat: xarray.DataArray
+            Latitude coordinates for the dataset
         """
         # target spatial reference
         target_crs = pyproj.CRS.from_user_input(crs)
@@ -817,9 +833,9 @@ class Dataset:
         lon, lat = transformer.transform(gridx, gridy)
         # convert to xarray DataArrays
         coords = dict(y=self._ds.y, x=self._ds.x)
-        self._lon = xr.DataArray(lon, coords=coords, dims=["y", "x"])
-        self._lat = xr.DataArray(lat, coords=coords, dims=["y", "x"])
-        return self
+        lon = xr.DataArray(lon, coords=coords, dims=["y", "x"])
+        lat = xr.DataArray(lat, coords=coords, dims=["y", "x"])
+        return lon, lat
 
     def transform_as(
         self,
