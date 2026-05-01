@@ -342,6 +342,7 @@ class Dataset:
             area = ps_scale * dx * dy
         else:
             # projected coordinates (assume Cartesian)
+            ny, nx = len(self._y), len(self._x)
             # calculate scaling factors to convert from axis units to meters
             axis_units = 1.0 * __ureg__.parse_units(self.axis_units)
             axis_scale = axis_units.to(__ureg__.meter).magnitude
@@ -349,7 +350,7 @@ class Dataset:
             dx = axis_scale * np.abs(self._x[1] - self._x[0])
             dy = axis_scale * np.abs(self._y[1] - self._y[0])
             # calculate area of each grid cell
-            area = dx * dy
+            area = dx * dy * np.ones((ny, nx))
         # return area as xarray DataArray
         return xr.DataArray(area, coords=coords, dims=["y", "x"], attrs=attrs)
 
