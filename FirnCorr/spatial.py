@@ -81,11 +81,7 @@ UPDATE HISTORY:
 
 from __future__ import annotations
 
-import warnings
 import numpy as np
-
-# suppress warnings
-warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 __all__ = [
     "data_type",
