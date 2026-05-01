@@ -298,8 +298,11 @@ class Dataset:
         b_axis = geod.b
         # ellipsoidal flattening
         flat = geod.f
-        # average radius with same volume as ellipsoid
-        rad_e = a_axis * (1.0 - flat) ** (1.0 / 3.0)
+        # first numerical eccentricity and its square
+        e12 = geod.es
+        ecc = np.sqrt(e12)
+        # authalic radius (same area as ellipsoid)
+        rad_e = np.sqrt(0.5 * (a_axis**2 + b_axis**2 * np.arctanh(ecc) / ecc))
         # coordinates and attributes for output DataArray
         coords = dict(y=self._ds.y, x=self._ds.x)
         attrs = dict(units="m^2", long_name="Grid Cell Area")
@@ -312,7 +315,7 @@ class Dataset:
             dy = np.abs(np.radians(self._y[1] - self._y[0]))
             # calculate area of each grid cell
             area = (rad_e * dy) * (rad_e * dx * np.cos(gridy))
-            # note: differs from RACMO as they use semi-major axis for radius
+            # note: differs from RACMO as they calculate using equatorial radius
             attrs["note"] = f"Multiply by scale to approximate RACMO cell areas"
             attrs["scale"] = np.round((a_axis**2) / (rad_e**2), decimals=4)
         elif self.crs.is_geographic:
@@ -321,9 +324,12 @@ class Dataset:
             # grid spacing in the x and y directions
             dx = np.abs(np.radians(self._x[1] - self._x[0]))
             dy = np.abs(np.radians(self._y[1] - self._y[0]))
+            # radius of curvature in prime vertical direction (east-west)
+            N = a_axis / np.sqrt(1.0 - e12 * np.sin(gridy) ** 2)
+            # radius of curvature in meridional direction (north-south)
+            M = a_axis * (1.0 - e12) / (1.0 - e12 * np.sin(gridy) ** 2) ** 1.5
             # calculate area of each grid cell
-            hypot = np.hypot(a_axis * np.sin(gridy), b_axis * np.cos(gridy))
-            area = (hypot * dy) * (a_axis * dx * np.cos(gridy))
+            area = (M * dy) * (N * np.cos(gridy) * dx)
         elif self.crs.is_projected and crs.get("proj") == "stere":
             # stereographic projection
             geodetic_crs = getattr(self.crs, "geodetic_crs", 4326)
