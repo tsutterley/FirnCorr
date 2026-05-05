@@ -178,10 +178,11 @@ def test_wrap_longitudes():
     assert np.allclose(obs,exp)
 
 # PURPOSE: test polar stereographic scaling factors
-def test_distance_scaling():
+def test_polar_scaling():
     # latitude values from Table 24 of Snyder (1982)
     lat = 90 - np.arange(31)
     # expected k scaling factors from Snyder
+    # these are the inverse of the functional outputs
     expected = np.array(
         [
             1.000000,
@@ -221,9 +222,12 @@ def test_distance_scaling():
     test = FirnCorr.spatial.scale_factors(
         lat, reference_latitude=90.0, metric="distance"
     )
-    # values from Snyder are inverse of scale factor outputs
     assert np.allclose(1.0 / test, expected)
-
+    # calculate area scaling factors
+    test = FirnCorr.spatial.scale_factors(
+        lat, reference_latitude=90.0, metric="area"
+    )
+    assert np.allclose(1.0 / test, expected**2)
 
 # PURPOSE: test polar stereographic area scaling factors
 def test_area_scaling():
