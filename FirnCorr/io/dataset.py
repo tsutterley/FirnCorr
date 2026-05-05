@@ -21,6 +21,7 @@ PYTHON DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 04/2026: added combine_attrs to merge conflicts into a list
+        added grid cell area calculators for geographic and projected models
     Written 04/2026
 """
 
@@ -277,6 +278,88 @@ class Dataset:
         # return the dataset
         return ds
 
+    def cell_area(self):
+        """
+        Calculate the area of each grid cell in the ``Dataset``
+
+        Returns
+        -------
+        area: xarray.DataArray
+            Area of each grid cell in the dataset
+        """
+        from FirnCorr.spatial import scale_factors
+
+        # get PROJ4 parameters for dataset projection
+        crs = self.crs.to_dict()
+        # get geodetic parameters
+        geod = self.crs.get_geod()
+        # ellipsoid semi-major and semi-minor axes
+        a_axis = geod.a
+        b_axis = geod.b
+        # ellipsoidal flattening
+        flat = geod.f
+        # first numerical eccentricity and its square
+        e12 = geod.es
+        ecc = np.sqrt(e12)
+        # authalic radius (same area as ellipsoid)
+        rad_e = np.sqrt(0.5 * (a_axis**2 + b_axis**2 * np.arctanh(ecc) / ecc))
+        # coordinates and attributes for output DataArray
+        coords = dict(y=self._ds.y, x=self._ds.x)
+        attrs = dict(units="m^2", long_name="Grid Cell Area")
+        # calculate areas based on the coordinate reference system
+        if self.crs.is_geographic and crs.get("proj") == "ob_tran":
+            # rotated pole projection (assume spherical)
+            _, gridy = np.meshgrid(np.radians(self._x), np.radians(self._y))
+            # grid spacing in the x and y directions
+            dx = np.abs(np.radians(self._x[1] - self._x[0]))
+            dy = np.abs(np.radians(self._y[1] - self._y[0]))
+            # calculate area of each grid cell
+            area = (rad_e * dy) * (rad_e * dx * np.cos(gridy))
+            # note: differs from RACMO as they calculate using equatorial radius
+            attrs["note"] = f"Multiply by scale to approximate RACMO cell areas"
+            attrs["scale"] = np.round((a_axis**2) / (rad_e**2), decimals=4)
+        elif self.crs.is_geographic:
+            # geographic coordinates (assume equirectangular)
+            _, gridy = np.meshgrid(np.radians(self._x), np.radians(self._y))
+            # grid spacing in the x and y directions
+            dx = np.abs(np.radians(self._x[1] - self._x[0]))
+            dy = np.abs(np.radians(self._y[1] - self._y[0]))
+            # radius of curvature in prime vertical direction (east-west)
+            N = a_axis / np.sqrt(1.0 - e12 * np.sin(gridy) ** 2)
+            # radius of curvature in meridional direction (north-south)
+            M = a_axis * (1.0 - e12) / (1.0 - e12 * np.sin(gridy) ** 2) ** 1.5
+            # calculate area of each grid cell
+            area = (M * dy) * (N * np.cos(gridy) * dx)
+        elif self.crs.is_projected and crs.get("proj") == "stere":
+            # stereographic projection
+            geodetic_crs = getattr(self.crs, "geodetic_crs", 4326)
+            # get latitude and true-scale latitude
+            _, lat = self.to_geographic(crs=geodetic_crs)
+            lat_ts = crs.get("lat_ts", 90.0)
+            # calculate scaling factors for area distortions
+            ps_scale = scale_factors(lat, flat=flat, reference_latitude=lat_ts)
+            # calculate scaling factors to convert from axis units to meters
+            axis_units = 1.0 * __ureg__.parse_units(self.axis_units)
+            axis_scale = axis_units.to(__ureg__.meter).magnitude
+            # grid spacing in the x and y directions
+            dx = axis_scale * np.abs(self._x[1] - self._x[0])
+            dy = axis_scale * np.abs(self._y[1] - self._y[0])
+            # calculate area of each grid cell
+            area = ps_scale * dx * dy
+        else:
+            # projected coordinates (assume Cartesian)
+            ny, nx = len(self._y), len(self._x)
+            # calculate scaling factors to convert from axis units to meters
+            axis_units = 1.0 * __ureg__.parse_units(self.axis_units)
+            axis_scale = axis_units.to(__ureg__.meter).magnitude
+            # grid spacing in the x and y directions
+            dx = axis_scale * np.abs(self._x[1] - self._x[0])
+            dy = axis_scale * np.abs(self._y[1] - self._y[0])
+            # calculate area of each grid cell
+            area = dx * dy * np.ones((ny, nx))
+        # return area as xarray DataArray
+        return xr.DataArray(area, coords=coords, dims=["y", "x"], attrs=attrs)
+
     def coords_as(
         self,
         x: np.ndarray,
@@ -475,22 +558,6 @@ class Dataset:
         # return xarray dataset
         return other
 
-    def get(self, name: str):
-        """
-        Get variable in ``Dataset`` using a case-insensitive search
-
-        Parameters
-        ----------
-        name: str
-            Name of variable to find in dataset
-
-        Returns
-        -------
-        var: xarray.DataArray or None
-            Variable from dataset if found, otherwise None
-        """
-        return get_variable(self._ds, name)
-
     def gaussian_filter(
         self,
         sigma: float | list[float] = 1.5,
@@ -535,6 +602,22 @@ class Dataset:
                 ds[v][i, :, :] = xr.where(mask, tmp, scaled)
         # return the smoothed dataset
         return ds
+
+    def get(self, name: str):
+        """
+        Get variable in ``Dataset`` using a case-insensitive search
+
+        Parameters
+        ----------
+        name: str
+            Name of variable to find in dataset
+
+        Returns
+        -------
+        var: xarray.DataArray or None
+            Variable from dataset if found, otherwise None
+        """
+        return get_variable(self._ds, name)
 
     def grid_interp(
         self,
@@ -728,6 +811,38 @@ class Dataset:
             raise ValueError(f"Invalid reference method: {reference}")
         # return the anomaly dataset
         return ds
+
+    def to_geographic(self, crs: str | int | dict = 4326):
+        """
+        Get latitude and longitude coordinates for the ``Dataset``
+
+        Parameters
+        ----------
+        crs: str, int, or dict, default 4326 (WGS84 Latitude/Longitude)
+            Coordinate reference system for geographic coordinates
+
+        Returns
+        -------
+        lon: xarray.DataArray
+            Longitude coordinates for the dataset
+        lat: xarray.DataArray
+            Latitude coordinates for the dataset
+        """
+        # target spatial reference
+        target_crs = pyproj.CRS.from_user_input(crs)
+        # create transformation
+        transformer = pyproj.Transformer.from_crs(
+            self.crs, target_crs, always_xy=True
+        )
+        # create meshgrid of points in original projection
+        gridx, gridy = np.meshgrid(self._x, self._y)
+        # convert coordinates to latitude and longitude
+        lon, lat = transformer.transform(gridx, gridy)
+        # convert to xarray DataArrays
+        coords = dict(y=self._ds.y, x=self._ds.x)
+        lon = xr.DataArray(lon, coords=coords, dims=["y", "x"])
+        lat = xr.DataArray(lat, coords=coords, dims=["y", "x"])
+        return lon, lat
 
     def transform_as(
         self,

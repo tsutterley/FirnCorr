@@ -176,3 +176,100 @@ def test_wrap_longitudes():
     exp[:181] = np.arange(181)
     exp[181:] = np.arange(-179,0)
     assert np.allclose(obs,exp)
+
+# PURPOSE: test polar stereographic scaling factors
+def test_polar_scaling():
+    # latitude values from Table 24 of Snyder (1982)
+    lat = 90 - np.arange(31)
+    # expected k scaling factors from Snyder
+    # these are the inverse of the functional outputs
+    expected = np.array(
+        [
+            1.000000,
+            1.000076,
+            1.000305,
+            1.000686,
+            1.001219,
+            1.001906,
+            1.002746,
+            1.003741,
+            1.004889,
+            1.006193,
+            1.007653,
+            1.009270,
+            1.011045,
+            1.012979,
+            1.015073,
+            1.017328,
+            1.019746,
+            1.022329,
+            1.025077,
+            1.027993,
+            1.031078,
+            1.034335,
+            1.037765,
+            1.041370,
+            1.045154,
+            1.049117,
+            1.053264,
+            1.057595,
+            1.062115,
+            1.066826,
+            1.071732,
+        ]
+    )
+    # calculate distance scaling factors
+    test = FirnCorr.spatial.scale_factors(
+        lat, reference_latitude=90.0, metric="distance"
+    )
+    assert np.allclose(1.0 / test, expected)
+    # calculate area scaling factors
+    test = FirnCorr.spatial.scale_factors(
+        lat, reference_latitude=90.0, metric="area"
+    )
+    assert np.allclose(1.0 / test, expected**2)
+
+# PURPOSE: test polar stereographic area scaling factors
+def test_area_scaling():
+    lat = 90 - np.arange(31)
+    expected = np.array(
+        [
+            [1.05677017, 1.06312303],
+            [1.05660922, 1.06296111],
+            [1.05612651, 1.06247550],
+            [1.05532241, 1.06166657],
+            [1.05419754, 1.06053493],
+            [1.05275277, 1.05908147],
+            [1.05098921, 1.05730732],
+            [1.04890823, 1.05521383],
+            [1.04651144, 1.05280263],
+            [1.04380069, 1.05007558],
+            [1.04077805, 1.04703477],
+            [1.03744586, 1.04368255],
+            [1.03380669, 1.04002150],
+            [1.02986332, 1.03605443],
+            [1.02561878, 1.03178437],
+            [1.02107633, 1.02721461],
+            [1.01623942, 1.02234862],
+            [1.01111176, 1.01719014],
+            [1.00569725, 1.01174308],
+            [1.00000000, 1.00601158],
+            [0.99402434, 1.00000000],
+            [0.98777480, 0.99371288],
+            [0.98125608, 0.98715498],
+            [0.97447310, 0.98033122],
+            [0.96743096, 0.97324675],
+            [0.96013493, 0.96590686],
+            [0.95259046, 0.95831704],
+            [0.94480318, 0.95048294],
+            [0.93677886, 0.94241038],
+            [0.92852344, 0.93410533],
+            [0.92004302, 0.92557393],
+        ]
+    )
+    # calculate area scaling factors for EPSG:3031
+    test = FirnCorr.spatial.scale_factors(-lat, reference_latitude=-71.0)
+    assert np.allclose(test, expected[:, 0])
+    # calculate area scaling factors for EPSG:3413
+    test = FirnCorr.spatial.scale_factors(lat, reference_latitude=70.0)
+    assert np.allclose(test, expected[:, 1])
