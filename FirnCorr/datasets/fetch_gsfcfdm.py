@@ -28,7 +28,7 @@ _zenodo_api_url = "https://zenodo.org/api"
 
 def fetch_gsfcfdm(
     record: str,
-    directory: str | pathlib.Path | None = _default_directory,
+    directory: str | pathlib.Path = _default_directory,
     timeout: int | None = None,
     clobber: bool = False,
     chunk: int = 16384,
@@ -55,6 +55,9 @@ def fetch_gsfcfdm(
 
     # standard output (terminal output)
     logging.basicConfig(level=logging.INFO)
+    # check if local directory exists and recursively create if not
+    directory = pathlib.Path(directory).expanduser().absolute()
+    directory.mkdir(exist_ok=True, parents=True, mode=mode)
 
     # zenodo API host
     HOST = FirnCorr.utilities.URL(_zenodo_api_url)

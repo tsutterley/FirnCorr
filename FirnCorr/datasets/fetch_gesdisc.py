@@ -99,7 +99,7 @@ _default_directory = FirnCorr.utilities.get_cache_path()
 # PURPOSE: download MERRA-2 files from GESDISC
 def fetch_gesdisc(
     client,
-    directory: str | pathlib.Path | None = _default_directory,
+    directory: str | pathlib.Path = _default_directory,
     version: str | None = None,
     years: list | None = None,
     endpoint: str | None = None,
