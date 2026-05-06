@@ -1,19 +1,20 @@
 """
-fetch_gemb.py
-Written by Tyler Sutterley (04/2026)
-Downloads Glacier Energy and Mass Balance (GEMB) model outputs
+fetch_gsfcfdm.py
+Written by Tyler Sutterley (05/2026)
+Downloads NASA GSFC Firn Densification Model (GSFC-fdm) model outputs
 
 PROGRAM DEPENDENCIES:
     utilities.py: download and management utilities for syncing files
 
 UPDATE HISTORY:
-    Written 04/2026
+    Written 05/2026
 """
 
 import re
 import shutil
 import logging
 import pathlib
+import zipfile
 import argparse
 import FirnCorr.utilities
 
@@ -25,7 +26,7 @@ _default_ssl_context = FirnCorr.utilities._default_ssl_context
 _zenodo_api_url = "https://zenodo.org/api"
 
 
-def fetch_gemb(
+def fetch_gsfcfdm(
     record: str,
     directory: str | pathlib.Path = _default_directory,
     timeout: int | None = None,
@@ -34,7 +35,7 @@ def fetch_gemb(
     mode: int = 0o775,
 ):
     """
-    Syncs GEMB model outputs for a given zenodo record
+    Syncs GSFC-fdm model outputs for a given zenodo record
 
     Parameters
     ----------
@@ -67,10 +68,8 @@ def fetch_gemb(
     version = str(records_response["id"])
 
     # regular expression pattern for extracting parameters
-    regex_pattern = (
-        r"GEMB_(Greenland|Antarctica)(_and_Periphery)?_"
-        r"(FAC|SMB)_\d{4}_\d{4}_(.*?)(\d+day_)?mesh_\d+km_(v.*?).nc$"
-    )
+    regex_pattern = r"(v\d+.*?)_(ais|gris)(.*?)\.(.*?)$"
+    rx = re.compile(regex_pattern, re.IGNORECASE)
     # get files from latest version of record
     deposit_api = HOST.joinpath("deposit", "depositions", version, "files")
     logging.debug(deposit_api)
@@ -81,7 +80,7 @@ def fetch_gemb(
     # for each file in the JSON response for deposits
     for f in deposit_response:
         # search for pattern in filename
-        match = re.search(regex_pattern, f["filename"])
+        match = rx.search(f["filename"])
         # check if needing to include algorithm in the hash comparison
         include_algorithm = re.match(r"md5\:", f["checksum"])
         # skip file if pattern is not found
@@ -89,9 +88,9 @@ def fetch_gemb(
             logging.debug(f"Skipping file: {f['filename']}")
             continue
         # extract parameters from filename
-        gemb_version = match.group(6).replace("_", ".")
+        gsfcfdm_version = match.group(1).replace("_", ".")
         # check if local directory exists and recursively create if not
-        local_directory = directory.joinpath("GEMB", gemb_version)
+        local_directory = directory.joinpath("GSFC-fdm", gsfcfdm_version)
         local_directory.mkdir(exist_ok=True, parents=True, mode=mode)
         # full path to output file
         local_file = local_directory.joinpath(f["filename"])
@@ -117,18 +116,40 @@ def fetch_gemb(
         # raise exception if checksums do not match
         if computed_md5 != f["checksum"]:
             raise Exception(f"Checksum mismatch: {download.urlname}")
-        # write the file to the local directory
-        logging.info(f"\t--> {local_file}")
-        with local_file.open(mode="wb") as f:
-            shutil.copyfileobj(remote_buffer, f, chunk)
-        # change the permissions mode
-        local_file.chmod(mode=mode)
+        # download file or extract files from zip
+        if pathlib.Path(f["filename"]).suffix == ".zip":
+            # extract the zip file into the local directory
+            with zipfile.ZipFile(remote_buffer) as z:
+                # extract each file and set permissions
+                for member in z.filelist:
+                    # extract the file to the local directory
+                    local_file = local_directory.joinpath(member.filename)
+                    logging.info(f"\t--> {local_file}")
+                    z.extract(path=local_directory, member=member)
+                    # change the permissions mode
+                    local_file.chmod(mode=mode)
+                    # create symbolic link
+                    symlink = rx.sub(r"\1_\2.\4", member.filename)
+                    symlink_file = local_file.with_name(symlink)
+                    FirnCorr.utilities.symlink(local_file, symlink_file)
+        else:
+            # write the file to the local directory
+            logging.info(f"\t--> {local_file}")
+            with local_file.open(mode="wb") as f:
+                shutil.copyfileobj(remote_buffer, f, chunk)
+            # change the permissions mode
+            local_file.chmod(mode=mode)
+            # create symbolic link
+            symlink = rx.sub(r"\1_\2.\4", f["filename"])
+            symlink_file = local_file.with_name(symlink)
+            FirnCorr.utilities.symlink(local_file, symlink_file)
 
 
 # PURPOSE: create argument parser
 def arguments():
     parser = argparse.ArgumentParser(
-        description="""Downloads Glacier Energy and Mass Balance (GEMB) model outputs
+        description="""Downloads NASA GSFC Firn Densification Model
+            (GSFC-fdm) model outputs
             """,
         fromfile_prefix_chars="@",
     )
@@ -146,7 +167,7 @@ def arguments():
         "--record",
         "-R",
         type=str,
-        default="7130968",
+        default="7054573",
         help="Zenodo record",
     )
     # connection timeout
@@ -184,7 +205,7 @@ def main():
     args, _ = parser.parse_known_args()
 
     # run program for record
-    fetch_gemb(
+    fetch_gsfcfdm(
         args.record,
         directory=args.directory,
         timeout=args.timeout,

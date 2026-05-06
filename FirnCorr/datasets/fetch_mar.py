@@ -36,7 +36,7 @@ _default_directory = FirnCorr.utilities.get_cache_path()
 # PURPOSE: sync local MAR files for a given URL
 def fetch_mar(
     URL,
-    directory: str | pathlib.Path | None = _default_directory,
+    directory: str | pathlib.Path = _default_directory,
     years: list[int] | None = None,
     timeout: int | None = None,
     processes: int = 0,

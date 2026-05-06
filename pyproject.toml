@@ -65,6 +65,7 @@ dev = ["flake8", "gh", "pytest>=4.6", "pytest-cov", "pytest-xdist"]
 
 [project.scripts]
 "fetch_gemb.py" = "FirnCorr.datasets.fetch_gemb:main"
+"fetch_gsfcfdm.py" = "FirnCorr.datasets.fetch_gsfcfdm:main"
 "fetch_gesdisc.py" = "FirnCorr.datasets.fetch_gesdisc:main" 
 "fetch_mar.py" = "FirnCorr.datasets.fetch_mar:main" 
 
