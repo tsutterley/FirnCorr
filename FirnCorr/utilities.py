@@ -712,20 +712,21 @@ def symlink(
     # verify that source and destination are pathlib.Path objects
     source = pathlib.Path(source).expanduser()
     destination = pathlib.Path(destination).expanduser()
-    # skip if symlink points to the same file
-    if destination == filename:
+    # skip if symlink has the same path as source file
+    if source == destination:
+        logging.debug(f"Symbolic link {destination} matches source {source}")
+        return
+    # skip if symlink already points to the source file
+    if destination.is_symlink() and destination.resolve() == source.resolve():
+        logging.debug(f"Symbolic link already exists: {destination}")
         return
     # remove existing symbolic link if it points to a different file
     if destination.is_symlink() and destination.resolve() != source.resolve():
         logging.debug(f"Removing existing symbolic link: {destination}")
         destination.unlink()
-    # create symbolic link
-    try:
-        destination.symlink_to(source)
-    except FileExistsError:
-        logging.debug(f"Symlink already exists: {destination}")
-    else:
-        logging.info(f"\t--> {destination} (symlink)")
+    # create new symbolic link
+    logging.info(f"\t--> {destination} (symlink)")
+    destination.symlink_to(source)
 
 
 # PURPOSE: check ftp connection
