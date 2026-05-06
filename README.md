@@ -77,6 +77,11 @@ This will automatically create the environment, install all dependencies, and la
 > "Evaluation of Reconstructions of Snow/Ice Melt in Greenland by Regional Atmospheric Climate Models Using Laser Altimetry Data", *Geophysical Research Letters*, 45(16),
 > 8324-8333, (2018). [doi: 10.1029/2018GL078645](https://doi.org/10.1029/2018GL078645)
 
+## Alternative Software
+
+SMB correction tools built upon [`pointCollection`](https://github.com/SmithB/pointCollection):  
+<https://github.com/tsutterley/SMBcorr>
+
 ## Download
 
 The program homepage is:  
@@ -84,11 +89,6 @@ The program homepage is:
 
 A zip archive of the latest version is available directly at:  
 <https://github.com/tsutterley/FirnCorr/archive/main.zip>
-
-## Alternative Software
-
-SMB correction tools built upon [`pointCollection`](https://github.com/SmithB/pointCollection):  
-<https://github.com/SmithB/SMBcorr>
 
 ## Disclaimer
 

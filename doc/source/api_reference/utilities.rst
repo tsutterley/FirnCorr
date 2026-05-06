@@ -50,6 +50,8 @@ General Methods
 
 .. autofunction:: FirnCorr.utilities.copy
 
+.. autofunction:: FirnCorr.utilities.symlink
+
 .. autofunction:: FirnCorr.utilities.check_ftp_connection
 
 .. autofunction:: FirnCorr.utilities.ftp_list

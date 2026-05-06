@@ -94,6 +94,7 @@ __all__ = [
     "isoformat",
     "even",
     "copy",
+    "symlink",
     "check_ftp_connection",
     "ftp_list",
     "from_ftp",
@@ -675,9 +676,9 @@ def copy(
 
     Parameters
     ----------
-    source: str
+    source: str or pathlib.Path
         Source file
-    destination: str
+    destination: str or pathlib.Path
         Copied destination file
     move: bool, default False
         Remove the source file
@@ -691,6 +692,40 @@ def copy(
     # remove the original file if moving
     if move:
         source.unlink()
+
+
+# PURPOSE: make a symbolic link to a file
+def symlink(
+    source: str | pathlib.Path,
+    destination: str | pathlib.Path,
+):
+    """
+    Create a symbolic link to a file
+
+    Parameters
+    ----------
+    source: str or pathlib.Path
+        Source file
+    destination: str or pathlib.Path
+        Symbolic link file
+    """
+    # verify that source and destination are pathlib.Path objects
+    source = pathlib.Path(source).expanduser()
+    destination = pathlib.Path(destination).expanduser()
+    # skip if symlink points to the same file
+    if destination == filename:
+        return
+    # remove existing symbolic link if it points to a different file
+    if destination.is_symlink() and destination.resolve() != source.resolve():
+        logging.debug(f"Removing existing symbolic link: {destination}")
+        destination.unlink()
+    # create symbolic link
+    try:
+        destination.symlink_to(source)
+    except FileExistsError:
+        logging.debug(f"Symlink already exists: {destination}")
+    else:
+        logging.info(f"\t--> {destination} (symlink)")
 
 
 # PURPOSE: check ftp connection
