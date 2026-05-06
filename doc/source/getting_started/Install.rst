@@ -2,10 +2,37 @@
 Setup and Installation
 ======================
 
+Dependencies
+############
+
+``FirnCorr`` is dependent on several open source programs that can be installed using
+OS-specific package management systems (e.g. ``apt`` or ``homebrew``),
+``conda`` or from source:
+
+- `PROJ <https://proj.org/>`_
+- `HDF5 <https://www.hdfgroup.org/>`_
+- `libxml2 <http://xmlsoft.org/>`_
+- `libxslt <http://xmlsoft.org/XSLT/>`_
+
 Installation
 ############
 
-``FirnCorr`` is currently only available for download from the `GitHub repository <https://github.com/tsutterley/FirnCorr>`_.
+``FirnCorr`` is available for download from the `GitHub repository <https://github.com/tsutterley/FirnCorr>`_,
+the `Python Package Index (pypi) <https://pypi.org/project/FirnCorr/>`_,
+and from `conda-forge <https://anaconda.org/conda-forge/firncorr>`_.
+
+
+The simplest installation for most users will likely be using ``conda`` or ``mamba``:
+
+.. code-block:: bash
+
+    conda install -c conda-forge firncorr
+
+``conda`` installed versions of ``FirnCorr`` can be upgraded to the latest stable release:
+
+.. code-block:: bash
+
+    conda update firncorr
 
 Development Install
 ###################

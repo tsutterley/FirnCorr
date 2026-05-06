@@ -6,6 +6,20 @@ Python-based tools for correcting data for surface mass balance and firn process
 
 <table>
   <tr>
+    <td><b>Version:</b></td>
+    <td>
+        <a href="https://pypi.python.org/pypi/FirnCorr/" alt="PyPI"><img src="https://img.shields.io/pypi/v/FirnCorr.svg"></a>
+        <a href="https://anaconda.org/conda-forge/firncorr" alt="conda-forge"><img src="https://img.shields.io/conda/vn/conda-forge/firncorr"></a>
+        <a href="https://github.com/tsutterley/FirnCorr/releases/latest" alt="commits-since"><img src="https://img.shields.io/github/commits-since/tsutterley/FirnCorr/latest"></a>
+    </td>
+  </tr>
+  <tr>
+    <td><b>Citation:</b></td>
+    <td>
+        <a href="https://doi.org/10.5281/zenodo.20059173" alt="zenodo"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.20059173.svg"></a>
+    </td>
+  </tr>
+  <tr>
     <td><b>Tests:</b></td>
     <td>
         <a href="https://firncorr.readthedocs.io/en/latest/?badge=latest" alt="Documentation Status"><img src="https://readthedocs.org/projects/firncorr/badge/?version=latest"></a>
@@ -24,6 +38,28 @@ Python-based tools for correcting data for surface mass balance and firn process
 For more information: see the documentation at [firncorr.readthedocs.io](https://firncorr.readthedocs.io/)
 
 ## Installation
+
+From PyPI:
+
+```bash
+python3 -m pip install FirnCorr
+```
+
+To include all optional dependencies:
+
+```bash
+python3 -m pip install FirnCorr[all]
+```
+
+Using `conda` or `mamba` from conda-forge:
+
+```bash
+conda install -c conda-forge firncorr
+```
+
+```bash
+mamba install -c conda-forge firncorr
+```
 
 Development version from GitHub:
 
@@ -67,16 +103,6 @@ This will automatically create the environment, install all dependencies, and la
 - [timescale: Python tools for time and astronomical calculations](https://pypi.org/project/timescale/)
 - [xarray: N-D labeled arrays and datasets in Python](https://docs.xarray.dev/en/stable/) 
 
-## References
-
-> B. E. Smith, B. Medley, X. Fettweis, T. Sutterley, P. Alexander, D. Porter, and M. Tedesco,
->  "Evaluating Greenland surface-mass-balance and firn-densification data using ICESat-2 altimetry",
->  *The Cryosphere*, 17(2), 789-808, (2023). [doi: 10.5194/tc-17-789-2023](https://doi.org/10.5194/tc-17-789-2023)
-
-> T. C. Sutterley, I. Velicogna, X. Fettweis, E. Rignot, B. Noël, and M. van den Broeke,
-> "Evaluation of Reconstructions of Snow/Ice Melt in Greenland by Regional Atmospheric Climate Models Using Laser Altimetry Data", *Geophysical Research Letters*, 45(16),
-> 8324-8333, (2018). [doi: 10.1029/2018GL078645](https://doi.org/10.1029/2018GL078645)
-
 ## Alternative Software
 
 SMB correction tools built upon [`pointCollection`](https://github.com/SmithB/pointCollection):  
@@ -100,6 +126,16 @@ The software is provided here for your convenience but *with no guarantees whats
 
 This project contains work and contributions from the [scientific community](./CONTRIBUTORS.md).
 If you would like to contribute to the project, please have a look at the [contribution guidelines](./doc/source/getting_started/Contributing.rst), [open issues](https://github.com/tsutterley/FirnCorr/issues) and [discussions board](https://github.com/tsutterley/FirnCorr/discussions).
+
+## References
+
+> B. E. Smith, B. Medley, X. Fettweis, T. Sutterley, P. Alexander, D. Porter, and M. Tedesco,
+>  "Evaluating Greenland surface-mass-balance and firn-densification data using ICESat-2 altimetry",
+>  *The Cryosphere*, 17(2), 789-808, (2023). [doi: 10.5194/tc-17-789-2023](https://doi.org/10.5194/tc-17-789-2023)
+
+> T. C. Sutterley, I. Velicogna, X. Fettweis, E. Rignot, B. Noël, and M. van den Broeke,
+> "Evaluation of Reconstructions of Snow/Ice Melt in Greenland by Regional Atmospheric Climate Models Using Laser Altimetry Data", *Geophysical Research Letters*, 45(16),
+> 8324-8333, (2018). [doi: 10.1029/2018GL078645](https://doi.org/10.1029/2018GL078645)
 
 ## License
 

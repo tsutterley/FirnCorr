@@ -710,20 +710,27 @@ def symlink(
         Symbolic link file
     """
     # verify that source and destination are pathlib.Path objects
-    source = pathlib.Path(source).expanduser()
-    destination = pathlib.Path(destination).expanduser()
-    # skip if symlink has the same path as source file
+    source = pathlib.Path(source).expanduser().absolute()
+    destination = pathlib.Path(destination).expanduser().absolute()
+    # verify conditions for creating symbolic link
     if source == destination:
+        # skip if symlink has the same path as source file
         logging.debug(f"Symbolic link {destination} matches source {source}")
         return
-    # skip if symlink already points to the source file
-    if destination.is_symlink() and destination.resolve() == source.resolve():
+    elif destination.exists() and not destination.is_symlink():
+        # file exists and is not a symbolic link
+        raise FileExistsError(f"Existing file: {destination}")
+    elif destination.is_symlink() and destination.resolve() == source.resolve():
+        # skip if symlink already points to the source file
         logging.debug(f"Symbolic link already exists: {destination}")
         return
-    # remove existing symbolic link if it points to a different file
-    if destination.is_symlink() and destination.resolve() != source.resolve():
+    elif destination.is_symlink() and destination.resolve() != source.resolve():
+        # remove existing symbolic link if it points to a different file
         logging.debug(f"Removing existing symbolic link: {destination}")
         destination.unlink()
+    # make source relative to destination parent if possible
+    if source.is_relative_to(destination.parent):
+        source = source.relative_to(destination.parent)
     # create new symbolic link
     logging.info(f"\t--> {destination} (symlink)")
     destination.symlink_to(source)

@@ -50,11 +50,21 @@ contact:
     orcid: "https://orcid.org/0000-0002-6964-1194"
 
 identifiers:
+  - type: doi
+    value: 10.5281/zenodo.20059173
+    description: Persistent identifier for FirnCorr
   - type: url
     value: https://github.com/tsutterley/FirnCorr
     description: GitHub repository for FirnCorr
+  - type: url
+    value: https://pypi.org/project/FirnCorr
+    description: FirnCorr on PyPI
+  - type: url
+    value: https://anaconda.org/conda-forge/firncorr
+    description: FirnCorr on conda-forge
 repository-code: "https://github.com/tsutterley/FirnCorr"
 url: "https://firncorr.readthedocs.io"
+doi: "10.5281/zenodo.20059173"
 
 references:
   - type: grant
