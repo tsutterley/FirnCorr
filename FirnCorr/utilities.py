@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 utilities.py
-Written by Tyler Sutterley (04/2026)
+Written by Tyler Sutterley (05/2026)
 Download and management utilities for syncing time and auxiliary files
 
 PYTHON DEPENDENCIES:
@@ -11,6 +11,7 @@ PYTHON DEPENDENCIES:
         https://pypi.org/project/platformdirs/
 
 UPDATE HISTORY:
+    Updated 05/2026: add exists to URL class to check if URL is valid
     Updated 04/2026: added string check to determine if is a valid URL
         added function to check if a dependency is available
         added detection functions for checking if files are compressed
@@ -339,6 +340,10 @@ class URL:
     def is_dir(self):
         """Boolean flag if path is a local directory"""
         return False
+
+    def exists(self):
+        """Boolean flag if ``URL`` is valid"""
+        return is_valid_url(self.urlname)
 
     def geturl(self):
         """String representation of the ``URL`` object"""

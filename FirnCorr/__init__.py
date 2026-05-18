@@ -12,6 +12,7 @@ matplotlib and cartopy
 Documentation is available at https://firncorr.readthedocs.io
 """
 
+import FirnCorr.earth
 import FirnCorr.interpolate
 import FirnCorr.spatial
 import FirnCorr.utilities

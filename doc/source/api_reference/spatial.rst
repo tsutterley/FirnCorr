@@ -3,7 +3,6 @@ spatial
 =======
 
 - Spatial transformation routines
-- Gravitational and ellipsoidal parameters :cite:p:`HofmannWellenhof:2006hy,Petit:2010tp`
 
 `Source code`__
 
@@ -13,9 +12,6 @@ General Methods
 ===============
 
 .. autofunction:: FirnCorr.spatial.data_type
-
-.. autoclass:: FirnCorr.spatial.datum
-   :members:
 
 .. autofunction:: FirnCorr.spatial.convert_ellipsoid
 

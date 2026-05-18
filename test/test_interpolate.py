@@ -130,8 +130,10 @@ def test_gap_fill(nx=250, ny=250, percent=30, N=100):
     # verify that coordinates are within tolerance
     assert np.allclose(val, test, atol=0.01)
 
+# parameterize number of neighbors to use in extrapolation
+@pytest.mark.parametrize("k", [1, 4])
 # PURPOSE: test extrapolation over a sphere
-def test_extrapolate(N=324):
+def test_extrapolate(k, N=324):
     # read the node file
     matfile = f'md{N:05d}.mat'
     xd = scipy.io.loadmat(filepath.joinpath(matfile))
@@ -154,7 +156,7 @@ def test_extrapolate(N=324):
     FI.mask = np.zeros((ny,nx),dtype=bool)
     # use nearest neighbors extrapolation to points
     test = FirnCorr.interpolate.extrapolate(LON, LAT, FI, lon, lat,
-        is_geographic=True)
+        k=k, is_geographic=True)
     # verify that coordinates are within tolerance
     assert np.allclose(val,test,atol=0.1)
 
