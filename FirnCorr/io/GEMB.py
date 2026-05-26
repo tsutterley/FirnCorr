@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 GEMB.py
-Written by Tyler Sutterley (04/2026)
+Written by Tyler Sutterley (05/2026)
 Reads GEMB data products provided by Nicole-Jeanne Schlegel (NOAA)
     and Alex Gardner (JPL)
 
@@ -13,6 +13,7 @@ PYTHON DEPENDENCIES:
         https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
+    Updated 05/2026: decode times for original dataset before assigning
     Updated 04/2026: added lineage attribute to save model filename(s)
         check if coordinate reference system is provided in attributes
     Written 04/2026
@@ -120,10 +121,10 @@ def open_dataset(
         tmp = xr.open_dataset(f, mask_and_scale=True, chunks=chunks)
     else:
         tmp = xr.open_dataset(filename, mask_and_scale=True, chunks=chunks)
+    # decode time variables from (nominal) decimal years to datetime64[D]
+    tmp["time"] = ((tmp["time"] - 1970.0) * 365.0).astype("datetime64[D]")
     # output dataset
     ds = xr.Dataset()
-    # decode time variables from (nominal) decimal years to datetime64[D]
-    ds["time"] = ((tmp["time"] - 1970.0) * 365.0).astype("datetime64[D]")
     # extract x and y coordinate arrays
     ds["y"] = tmp["y"].copy()
     ds["x"] = tmp["x"].copy()

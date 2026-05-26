@@ -24,6 +24,7 @@ import importlib.util
 
 # -- Project information -----------------------------------------------------
 on_rtd = os.environ.get("READTHEDOCS") == "True"
+on_github = os.environ.get("GITHUB_ACTIONS") == "true"
 
 # package metadata
 metadata = importlib.metadata.metadata("firncorr")

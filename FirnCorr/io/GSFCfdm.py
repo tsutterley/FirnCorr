@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 GSFCfdm.py
-Written by Tyler Sutterley (04/2026)
+Written by Tyler Sutterley (05/2026)
 Reads GSFC-fdm data products provided by Brooke Medley (NASA GSFC)
 
 PYTHON DEPENDENCIES:
@@ -12,6 +12,7 @@ PYTHON DEPENDENCIES:
         https://docs.xarray.dev/en/stable/
 
 UPDATE HISTORY:
+    Updated 05/2026: decode times for original dataset before assigning
     Updated 04/2026: added lineage attribute to save model filename
     Written 04/2026
 """
@@ -78,10 +79,10 @@ def open_dataset(
         tmp = xr.open_dataset(f, mask_and_scale=True, chunks=chunks)
     else:
         tmp = xr.open_dataset(filename, mask_and_scale=True, chunks=chunks)
+    # decode time variables from (nominal) decimal years to datetime64[D]
+    tmp["time"] = decode_times(tmp["time"])
     # output dataset
     ds = xr.Dataset()
-    # decode time variables
-    ds["time"] = decode_times(tmp["time"])
     # extract x and y coordinate arrays
     if tmp["x"].ndim == 2:
         ds["y"] = tmp["y"].isel(x=0).squeeze()

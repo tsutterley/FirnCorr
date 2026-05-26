@@ -690,9 +690,13 @@ class Dataset:
         ds = self._ds.copy()
         # inpaint each variable in the dataset
         for v in ds.data_vars.keys():
-            ds[v].values = inpaint(
-                self._x, self._y, self._ds[v].values, **kwargs
-            )
+            for i, t in enumerate(ds.time):
+                ds[v].values[i, :, :] = inpaint(
+                    self._x,
+                    self._y,
+                    self._ds[v].isel(time=i).values,
+                    **kwargs,
+                )
         # return the dataset
         return ds
 
