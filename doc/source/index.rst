@@ -89,7 +89,7 @@ Project Details
     :hidden:
     :caption: Getting Started
 
-    getting_started/Install.rst
+    getting_started/Install.ipynb
     getting_started/Getting-Started.rst
     getting_started/Contributing.rst
     getting_started/Code-of-Conduct.rst
