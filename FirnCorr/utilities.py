@@ -2,7 +2,7 @@
 """
 utilities.py
 Written by Tyler Sutterley (05/2026)
-Download and management utilities for syncing time and auxiliary files
+Download and management utilities for syncing files
 
 PYTHON DEPENDENCIES:
     lxml: processing XML and HTML in Python
@@ -12,6 +12,8 @@ PYTHON DEPENDENCIES:
 
 UPDATE HISTORY:
     Updated 05/2026: add exists to URL class to check if URL is valid
+        added function to get the github url of an item in the project repo
+        added keyword arguments to allow for encrypted ftp connections
     Updated 04/2026: added string check to determine if is a valid URL
         added function to check if a dependency is available
         added detection functions for checking if files are compressed
@@ -46,6 +48,7 @@ import re
 import io
 import ssl
 import json
+import time
 import netrc
 import ftplib
 import shutil
@@ -57,13 +60,13 @@ import hashlib
 import logging
 import pathlib
 import builtins
+import calendar
 import warnings
 import importlib
 import posixpath
 import subprocess
 import lxml.etree
 import platformdirs
-import calendar, time
 import dateutil.parser
 
 if sys.version_info[0] == 2:
@@ -81,6 +84,7 @@ __all__ = [
     "reify",
     "get_data_path",
     "get_cache_path",
+    "get_github_url",
     "import_dependency",
     "dependency_available",
     "is_valid_url",
@@ -89,6 +93,8 @@ __all__ = [
     "detect_compression",
     "compressuser",
     "get_hash",
+    "get_git_revision_hash",
+    "get_git_status",
     "url_split",
     "convert_arg_line_to_args",
     "get_unix_time",
@@ -187,6 +193,43 @@ def get_cache_path(
     elif isinstance(relpath, (str, pathlib.Path)):
         filepath = filepath.joinpath(relpath)
     return pathlib.Path(filepath)
+
+
+def get_github_url(
+    relpath: list | str,
+    username: str = "tsutterley",
+    repository: str = "FirnCorr",
+    branch: str = "main",
+):
+    """
+    Get the ``URL`` of an item's raw content from a GitHub repository
+
+    Parameters
+    ----------
+    relpath: list or str
+        Relative path
+    username: str, default 'tsutterley'
+        GitHub username for project repository
+    repository: str, default 'FirnCorr'
+        GitHub project name
+    branch: str, default 'main'
+        GitHub branch name
+
+    Returns
+    -------
+    raw_url: str
+        item ``URL``
+    """
+    # components of the URL for raw content from the project repository
+    HOST = URL("https://raw.githubusercontent.com")
+    HOST = HOST.joinpath(username, repository, "refs", "heads", branch)
+    # check if relative path is a string and convert to list
+    if isinstance(relpath, str):
+        relpath = [relpath]
+    # append the relative path components to the URL
+    raw_url = HOST.joinpath(*relpath).urlname
+    # return the URL for the raw content
+    return raw_url
 
 
 def import_dependency(
@@ -368,7 +411,7 @@ class URL:
 
     def load(self, *args, **kwargs):
         """Load ``JSON`` response from URL"""
-        return from_json(self.urlname, headers=self._headers, *args, **kwargs)
+        return from_json(self.urlname, *args, headers=self._headers, **kwargs)
 
     def ping(self, *args, **kwargs) -> bool:
         """Ping URL to check connection"""
@@ -376,7 +419,7 @@ class URL:
 
     def query(self, *args, **kwargs):
         """List contents from URL"""
-        return http_list(self.urlname, headers=self._headers, *args, **kwargs)
+        return http_list(self.urlname, *args, headers=self._headers, **kwargs)
 
     def read(self, *args, **kwargs):
         """Open URL and read response"""
@@ -557,6 +600,47 @@ def get_hash(
                 raise ValueError(f"Invalid hashing algorithm: {algorithm}")
     else:
         return ""
+
+
+# PURPOSE: get the git hash value
+def get_git_revision_hash(
+    refname: str = "HEAD",
+    short: bool = False,
+):
+    """
+    Get the ``git`` hash value for a particular reference
+
+    Parameters
+    ----------
+    refname: str, default HEAD
+        Symbolic reference name
+    short: bool, default False
+        Return the shorted hash value
+    """
+    # get path to .git directory from current file path
+    filename = inspect.getframeinfo(inspect.currentframe()).filename
+    basepath = pathlib.Path(filename).absolute().parent.parent
+    gitpath = basepath.joinpath(".git")
+    # build command
+    cmd = ["git", f"--git-dir={gitpath}", "rev-parse"]
+    cmd.append("--short") if short else None
+    cmd.append(refname)
+    # get output
+    with warnings.catch_warnings():
+        return str(subprocess.check_output(cmd), encoding="utf8").strip()
+
+
+# PURPOSE: get the current git status
+def get_git_status():
+    """Get the status of a ``git`` repository as a boolean value"""
+    # get path to .git directory from current file path
+    filename = inspect.getframeinfo(inspect.currentframe()).filename
+    basepath = pathlib.Path(filename).absolute().parent.parent
+    gitpath = basepath.joinpath(".git")
+    # build command
+    cmd = ["git", f"--git-dir={gitpath}", "status", "--porcelain"]
+    with warnings.catch_warnings():
+        return bool(subprocess.check_output(cmd))
 
 
 # PURPOSE: recursively split a url path
@@ -746,6 +830,7 @@ def check_ftp_connection(
     HOST: str,
     username: str | None = None,
     password: str | None = None,
+    encrypted: bool = False,
 ):
     """
     Check internet connection with ``ftp`` host
@@ -758,11 +843,21 @@ def check_ftp_connection(
         ``ftp`` username
     password: str or NoneType
         ``ftp`` password
+    encrypted: bool, default False
+        Use an encrypted (TLS) connection
     """
     # attempt to connect to ftp host
     try:
-        f = ftplib.FTP(HOST)
-        f.login(username, password)
+        if encrypted:
+            # use an encrypted (TLS) connection
+            f = ftplib.FTP_TLS(HOST)
+            f.login(username, password)
+            f.prot_p()
+        else:
+            # use an unencrypted connection
+            f = ftplib.FTP(HOST)
+            f.login(username, password)
+        # try sending a no-op command
         f.voidcmd("NOOP")
     except IOError:
         raise RuntimeError("Check internet connection")
@@ -777,6 +872,7 @@ def ftp_list(
     HOST: str | list,
     username: str | None = None,
     password: str | None = None,
+    encrypted: bool = False,
     timeout: int | None = None,
     basename: bool = False,
     pattern: str | None = None,
@@ -793,6 +889,8 @@ def ftp_list(
         ``ftp`` username
     password: str or NoneType
         ``ftp`` password
+    encrypted: bool, default False
+        Use an encrypted (TLS) connection
     timeout: int or NoneType, default None
         Timeout in seconds for blocking operations
     basename: bool, default False
@@ -814,11 +912,19 @@ def ftp_list(
         HOST = url_split(HOST)
     # try to connect to ftp host
     try:
-        ftp = ftplib.FTP(HOST[0], timeout=timeout)
+        # try to connect to ftp host
+        if encrypted:
+            # use an encrypted (TLS) connection
+            ftp = ftplib.FTP_TLS(HOST[0], timeout=timeout)
+            ftp.login(username, password)
+            ftp.prot_p()
+        else:
+            # use an unencrypted connection
+            ftp = ftplib.FTP(HOST[0], timeout=timeout)
+            ftp.login(username, password)
     except (socket.gaierror, IOError):
         raise RuntimeError(f"Unable to connect to {HOST[0]}")
     else:
-        ftp.login(username, password)
         # list remote path
         output = ftp.nlst(posixpath.join(*HOST[1:]))
         # get last modified date of ftp files and convert into unix time
@@ -861,6 +967,7 @@ def from_ftp(
     username: str | None = None,
     password: str | None = None,
     timeout: int | None = None,
+    encrypted: bool = False,
     local: str | pathlib.Path | None = None,
     hash: str = "",
     chunk: int = 8192,
@@ -881,6 +988,8 @@ def from_ftp(
         ``ftp`` username
     password: str or NoneType
         ``ftp`` password
+    encrypted: bool, default False
+        Use an encrypted (TLS) connection
     timeout: int or NoneType, default None
         Timeout in seconds for blocking operations
     local: str, pathlib.Path or NoneType, default None
@@ -915,11 +1024,18 @@ def from_ftp(
     # try downloading from ftp
     try:
         # try to connect to ftp host
-        ftp = ftplib.FTP(HOST[0], timeout=timeout)
+        if encrypted:
+            # use an encrypted (TLS) connection
+            ftp = ftplib.FTP_TLS(HOST[0], timeout=timeout)
+            ftp.login(username, password)
+            ftp.prot_p()
+        else:
+            # use an unencrypted connection
+            ftp = ftplib.FTP(HOST[0], timeout=timeout)
+            ftp.login(username, password)
     except (socket.gaierror, IOError):
         raise RuntimeError(f"Unable to connect to {HOST[0]}")
     else:
-        ftp.login(username, password)
         # remote path
         ftp_remote_path = posixpath.join(*HOST[1:])
         # copy remote file contents to bytesIO object
@@ -1860,9 +1976,9 @@ def gesdisc_list(
     Returns
     -------
     colnames: list
-        column names in a directory
+        Column names in a directory
     collastmod: list
-        last modification times for items in the directory
+        Last modification times for items in the directory
     """
     # use netrc credentials
     if build and not (username or password):

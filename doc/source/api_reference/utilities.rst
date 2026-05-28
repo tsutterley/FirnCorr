@@ -19,6 +19,8 @@ General Methods
 
 .. autofunction:: FirnCorr.utilities.get_cache_path
 
+.. autofunction:: FirnCorr.utilities.get_github_url
+
 .. autofunction:: FirnCorr.utilities.import_dependency
 
 .. autofunction:: FirnCorr.utilities.dependency_available
@@ -35,6 +37,10 @@ General Methods
 .. autofunction:: FirnCorr.utilities.compressuser
 
 .. autofunction:: FirnCorr.utilities.get_hash
+
+.. autofunction:: FirnCorr.utilities.get_git_revision_hash
+
+.. autofunction:: FirnCorr.utilities.get_git_status
 
 .. autofunction:: FirnCorr.utilities.url_split
 
