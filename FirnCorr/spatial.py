@@ -388,7 +388,7 @@ def to_cartesian(
     lon = np.atleast_1d(np.copy(lon)).astype(np.float64)
     lat = np.atleast_1d(np.copy(lat)).astype(np.float64)
     # fix coordinates to be 0:360
-    lon[lon < 0] += 360.0
+    lon = np.where(lon < 0, lon + 360.0, lon)
     # Linear eccentricity and first numerical eccentricity
     lin_ecc = np.sqrt((2.0 * flat - flat**2) * a_axis**2)
     ecc1 = lin_ecc / a_axis
@@ -449,9 +449,7 @@ def to_sphere(
     th = np.arccos(z / rad)
     # convert to degrees and fix to 0:360
     lon = np.degrees(phi)
-    if np.any(lon < 0):
-        lt0 = np.nonzero(lon < 0)
-        lon[lt0] += 360.0
+    lon = np.where(lon < 0, lon + 360.0, lon)
     # convert to degrees and fix to -90:90
     lat = 90.0 - np.degrees(th)
     np.clip(lat, -90, 90, out=lat)

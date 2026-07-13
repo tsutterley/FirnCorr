@@ -1,6 +1,6 @@
-=======
-dataset
-=======
+===========
+``dataset``
+===========
 
 ``xarray`` extensions for SMB and firn model data
 

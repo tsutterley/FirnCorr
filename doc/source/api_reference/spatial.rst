@@ -1,6 +1,6 @@
-=======
-spatial
-=======
+===========
+``spatial``
+===========
 
 - Spatial transformation routines
 

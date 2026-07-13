@@ -97,15 +97,9 @@ Project Details
 .. toctree::
     :maxdepth: 1
     :hidden:
-    :caption: API Reference
+    :caption: User Guide
 
-    api_reference/datasets/datasets.rst
-    api_reference/earth.rst
-    api_reference/interpolate.rst
-    api_reference/io/io.rst
-    api_reference/regress.rst
-    api_reference/spatial.rst
-    api_reference/utilities.rst
+    api_reference/API-Reference.rst
 
 .. toctree::
     :maxdepth: 1

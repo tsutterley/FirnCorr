@@ -1,6 +1,6 @@
-=============
-fetch_gesdisc
-=============
+=================
+``fetch_gesdisc``
+=================
 
 - Downloads MERRA-2 products from the Goddard Earth Sciences Data and Information Server Center (GES DISC)
 

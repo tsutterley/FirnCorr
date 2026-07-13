@@ -1,6 +1,6 @@
-==
-io
-==
+======
+``io``
+======
 
 Input/output functions for reading and writing surface mass balance and firn data
 

@@ -1,6 +1,6 @@
-=======
-GEMB
-=======
+===========
+``GEMB``
+===========
 
 - Reads GEMB data products provided by Nicole-Jeanne Schlegel (NOAA) and Alex Gardner (JPL)
 

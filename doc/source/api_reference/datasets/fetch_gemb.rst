@@ -1,6 +1,6 @@
-==========
-fetch_gemb
-==========
+==============
+``fetch_gemb``
+==============
 
 - Downloads Glacier Energy and Mass Balance (GEMB) model outputs from `zenodo <https://doi.org/10.5281/zenodo.7130968>`_
 

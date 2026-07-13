@@ -1,6 +1,6 @@
-===========
-interpolate
-===========
+===============
+``interpolate``
+===============
 
 - Interpolators for spatial data
 

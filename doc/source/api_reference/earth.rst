@@ -1,6 +1,6 @@
-=====
-earth
-=====
+=========
+``earth``
+=========
 
 - Provides gravitational and ellipsoidal parameters from :cite:t:`HofmannWellenhof:2006hy,Petit:2010tp`
 

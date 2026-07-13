@@ -1,6 +1,6 @@
-========
-datasets
-========
+============
+``datasets``
+============
 
 Utilities for fetching and managing SMB and firn model datasets
 

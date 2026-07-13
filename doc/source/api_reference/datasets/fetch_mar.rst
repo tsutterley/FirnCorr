@@ -1,6 +1,6 @@
-=========
-fetch_mar
-=========
+=============
+``fetch_mar``
+=============
 
 - Downloads MAR regional climate outputs from a given URL
 

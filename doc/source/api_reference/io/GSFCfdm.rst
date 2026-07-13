@@ -1,6 +1,6 @@
-=======
-GSFCfdm
-=======
+===========
+``GSFCfdm``
+===========
 
 - Reads GSFC-fdm data products provided by Brooke Medley (NASA GSFC)
 

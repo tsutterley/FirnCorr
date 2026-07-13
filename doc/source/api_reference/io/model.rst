@@ -1,6 +1,6 @@
-=====
-model
-=====
+=========
+``model``
+=========
 
 Retrieves SMB and firn model parameters for known models and from model definition files
 

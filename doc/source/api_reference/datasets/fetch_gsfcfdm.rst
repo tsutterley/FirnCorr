@@ -1,6 +1,6 @@
-=============
-fetch_gsfcfdm
-=============
+=================
+``fetch_gsfcfdm``
+=================
 
 - Downloads NASA GSFC Firn Densification Model (GSFC-fdm) model outputs from `zenodo <https://doi.org/10.5281/zenodo.7054573>`_
 

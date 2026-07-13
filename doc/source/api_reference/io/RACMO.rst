@@ -1,6 +1,6 @@
-=====
-RACMO
-=====
+=========
+``RACMO``
+=========
 
 - Reads Regional Atmospheric and Climate MOdel (RACMO) data products provided by IMAU (Utrecht University)
 
