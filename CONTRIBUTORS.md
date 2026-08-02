@@ -6,3 +6,4 @@
 - [Tyler Sutterley (University of Washington)](http://psc.apl.uw.edu/people/investigators/tyler-sutterley/)
 - [Marco Tedesco (LDEO Columbia University)](https://www.earth.columbia.edu/users/profile/marco-tedesco)
 - [Hannah Verboncoeur (Colorado School of Mines)](https://glaciology.mines.edu/people/)
+- [Rohaiz Haris (Colorado School of Mines)](https://glaciology.mines.edu/people/)

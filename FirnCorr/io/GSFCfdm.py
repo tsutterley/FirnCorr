@@ -97,7 +97,7 @@ def open_dataset(
         # read dataset and remove singleton dimensions
         imap = _variable_mapping.get(var, var)
         # convert dimension order from matlab (time, x, y)
-        ds[imap] = tmp[var].squeeze().transpose("time", "y", "x")
+        ds[imap] = (("time", "y", "x"), tmp[var].squeeze().transpose("time", "y", "x"))
         # replace points where all values are zero with NaNs
         ds[imap] = ds[imap].where(
             ds[imap].sum(dim="time", skipna=False) != 0, np.nan, drop=False
